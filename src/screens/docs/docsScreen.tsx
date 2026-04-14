@@ -108,7 +108,7 @@ function useDocsScreen(params?: DocsScreenParams): DocsScreenModel {
 
     function _breadCrumbs(): Breadcrumb[] {
         return [
-            { route: { path: "/" }, label: "Documentation" },
+            { route: { path: "/home" }, label: "API Documentation" },
             { route: { path: _articleRoutePath() }, label: _articleTitle() }
         ];
     }

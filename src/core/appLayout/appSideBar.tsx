@@ -1,5 +1,5 @@
 import * as UECA from "ueca-react";
-import { Col, Row, UIBaseModel, UIBaseParams, UIBaseStruct, useUIBase, IconButtonModel, useIconButton } from "@components";
+import { Col, Row, UIBaseModel, UIBaseParams, UIBaseStruct, useUIBase, IconButtonModel, useIconButton, NavLinkModel, useNavLink } from "@components";
 import { AppMenuModel, useAppMenu } from "./appMenu";
 import { MenuIcon, MenuCollapseIcon } from "../misc/icons";
 
@@ -11,6 +11,7 @@ type AppSideBarStruct = UIBaseStruct<{
     children: {
         menu: AppMenuModel;
         toggleButton: IconButtonModel;
+        logoLink: NavLinkModel;
     };
 
     methods: {
@@ -45,6 +46,12 @@ function useAppSideBar(params?: AppSideBarParams): AppSideBarModel {
                 size: "small",
                 onClick: () => model.toggleCollapse()
             }),
+
+            logoLink: useNavLink({
+                route: { path: "https://cranesoft.net" },
+                newTab: true,
+                linkView: () => <img src="logo.png" alt="UECA-React Logo" style={{ height: "32px", width: "32px" }} />
+            }),
         },
 
         methods: {
@@ -55,9 +62,9 @@ function useAppSideBar(params?: AppSideBarParams): AppSideBarModel {
 
         View: () =>
             <Col id={model.htmlId()}
-                width={model.collapsed ? 60 : 400}
-                minWidth={model.collapsed ? 60 : 400}
-                maxWidth={model.collapsed ? 60 : 400}
+                width={model.collapsed ? 60 : 380}
+                minWidth={model.collapsed ? 60 : 380}
+                maxWidth={model.collapsed ? 60 : 380}
                 fill
                 sx={{
                     transition: "width 0.3s ease-in-out",
@@ -67,8 +74,9 @@ function useAppSideBar(params?: AppSideBarParams): AppSideBarModel {
                 <Col>
                     <Row render={!model.collapsed} verticalAlign={"center"} spacing={"small"} padding={{ leftRight: "small", topBottom: "tiny" }}>
                         <model.toggleButton.View />
+                        <model.logoLink.View />
                         <span style={{ fontSize: "16px", fontWeight: "bold", color: "#1976d2" }}>
-                            UECA React Documentation
+                            UECA-React 2.0
                         </span>
                     </Row>
                     <Row render={model.collapsed} horizontalAlign={"center"} verticalAlign={"center"} padding={{ topBottom: "tiny" }}>

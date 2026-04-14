@@ -52,7 +52,7 @@ function useAppMenu(params?: AppMenuParams): AppMenuModel {
                 icon: <HomeIcon />
             }),
             docsMenuItem: useGroupMenuItem({
-                text: "Documentation",
+                text: "API Documentation",
                 icon: <DocumentIcon />,      
                 expanded: true,          
                 subItems: () => [
