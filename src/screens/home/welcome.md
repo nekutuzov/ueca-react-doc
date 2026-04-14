@@ -31,7 +31,7 @@ See UECA-React in action with complete working applications developed with GitHu
 **🔗 Demo 2:** [Storybook](https://nekutuzov.github.io/ueca-react-app-demo2)  
 **📂 Source Code:** [GitHub Repository](https://github.com/nekutuzov/ueca-react-app-demo2)
 
-**🔗 Demo 3:** [API Documentation](https://nekutuzov.github.io/ueca-react-doc)  
+**🔗 Demo 3:** [UECA-React API Documentation](https://nekutuzov.github.io/ueca-react-doc)  
 **📂 Source Code:** [GitHub Repository](https://github.com/nekutuzov/ueca-react-doc)
 
 ---

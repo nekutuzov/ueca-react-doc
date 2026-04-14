@@ -180,7 +180,7 @@ function useAppMenu(params?: AppMenuParams): AppMenuModel {
             text: params.text,
             route: params.route,
             icon: params.icon,
-            active: () => model._activeRoute?.path === params.route.path,
+            active: () => model._activeRoute?.path === params.route.path || params.route.path === "/home" && model._activeRoute?.path === "/",
             mode: () => model.iconsOnly ? "icon-only" : "icon-text"
         });
     }
