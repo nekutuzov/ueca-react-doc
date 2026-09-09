@@ -13,7 +13,8 @@ This project is a docs-first viewer with:
 
 Primary docs source used by the app:
 
-- node_modules/ueca-react/docs/index.md
+- node_modules/ueca-react/docs/raw/index.md (the guide index)
+- node_modules/ueca-react/docs/raw/original/*.md (the articles themselves)
 
 ## Current App Shape
 
@@ -26,7 +27,7 @@ Primary docs source used by the app:
 - App routes (Home + docs articles):
   - src/core/infrastructure/appRoutes.tsx
 
-The app currently maps 19 documentation articles from the UECA docs index into /docs/* routes.
+The app currently maps the 21 documentation articles from the UECA docs index into /docs/* routes.
 
 ## Run
 
@@ -58,9 +59,11 @@ Lint:
 npm run lint
 ```
 
-Known non-blocking lint warning:
+Deploy (builds and stages dist into ../ueca-react-doc-deploy for the gh-pages branch):
 
-- public/mockServiceWorker.js has an unused eslint-disable directive
+```bash
+npm run deploy
+```
 
 ## How Navigation Works
 
@@ -68,16 +71,16 @@ Known non-blocking lint warning:
 2. Each menu entry points to a dedicated route under /docs/*.
 3. src/screens/docs/docsScreen.tsx maps each route to one markdown source file.
 4. src/components/misc/markdownPreview/markdownPreview.tsx intercepts internal links and routes them through App.Router.GoToRoute.
-5. Packaged markdown links like /docs/*.md are mapped to app routes.
+5. The packaged articles link to each other by relative file name, so those links are matched on the file name alone and mapped to app routes.
 
 ## Static Assets for Markdown
 
-Markdown images used by the docs should exist in public/docs/.
-Current assets include:
+Images in the packaged markdown are relative, and index.html sets <base href="/ueca-react-doc/">,
+so they resolve against the base rather than the current route. They live at the root of public/:
 
-- public/docs/logo.png
-- public/docs/component-integration.png
-- public/docs/component-mental-model.svg
+- public/logo.png
+- public/component-integration.png
+- public/component-mental-model.svg
 
 ## Path Aliases
 
@@ -99,17 +102,17 @@ Configured in tsconfig.app.json:
 
 When adding or changing docs entries:
 
-1. Read node_modules/ueca-react/docs/index.md.
+1. Read node_modules/ueca-react/docs/raw/index.md.
 2. Keep route/menu order aligned with index headings.
 3. Add route in src/core/infrastructure/appRoutes.tsx.
 4. Add menu item in src/core/appLayout/appMenu.tsx.
 5. Add markdown source mapping in src/screens/docs/docsScreen.tsx.
+6. Add the article file name to resolveDocPath in src/components/misc/markdownPreview/markdownPreview.tsx.
 
 ## Related Workspace Instructions
 
-Project-specific assistant guidance is in:
-
-- .github/copilot-instructions.md
+Project-specific assistant guidance is in CLAUDE.md. It defers to the agent skills that ship with
+the library, which npm install copies from node_modules/ueca-react/skills into .claude/skills/.
 
 ## License
 

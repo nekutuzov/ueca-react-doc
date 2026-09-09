@@ -76,7 +76,7 @@ function useAppSideBar(params?: AppSideBarParams): AppSideBarModel {
                         <model.toggleButton.View />
                         <model.logoLink.View />
                         <span style={{ fontSize: "16px", fontWeight: "bold", color: "#1976d2" }}>
-                            UECA-React 2.0
+                            UECA-React 3.0
                         </span>
                     </Row>
                     <Row render={model.collapsed} horizontalAlign={"center"} verticalAlign={"center"} padding={{ topBottom: "tiny" }}>

@@ -1,25 +1,29 @@
 import * as UECA from "ueca-react";
 import { ScreenBaseModel, ScreenBaseParams, ScreenBaseStruct, useScreenBase, Block, useMarkdownPreview, MarkdownPreviewModel } from "@components";
 import { Breadcrumb, CRUDScreenModel, useCRUDScreen } from "@core";
-import introductionDoc from "../../../node_modules/ueca-react/docs/Introduction to UECA-React.md?raw";
-import technologyDoc from "../../../node_modules/ueca-react/docs/Technology of UECA-React.md?raw";
-import componentMentalModelDoc from "../../../node_modules/ueca-react/docs/Component Mental Model in UECA-React.md?raw";
-import componentIntegrationModelDoc from "../../../node_modules/ueca-react/docs/Component Integration Model in UECA-React.md?raw";
-import introComponentsDoc from "../../../node_modules/ueca-react/docs/Introduction to UECA-React Components.md?raw";
-import componentIdsDoc from "../../../node_modules/ueca-react/docs/Component IDs in UECA-React.md?raw";
-import lifecycleHooksDoc from "../../../node_modules/ueca-react/docs/Lifecycle Hooks in UECA-React.md?raw";
-import stateManagementDoc from "../../../node_modules/ueca-react/docs/State Management in UECA-React.md?raw";
-import propertyBindingsDoc from "../../../node_modules/ueca-react/docs/Property Bindings in UECA-React.md?raw";
-import onChangeEventsDoc from "../../../node_modules/ueca-react/docs/Automatic onChange Events in UECA-React.md?raw";
-import onChangingEventsDoc from "../../../node_modules/ueca-react/docs/Automatic onChanging Events in UECA-React.md?raw";
-import onPropEventsDoc from "../../../node_modules/ueca-react/docs/Automatic onPropChange and onPropChanging Events in UECA-React.md?raw";
-import messageBusDoc from "../../../node_modules/ueca-react/docs/Message Bus in UECA-React.md?raw";
-import arraysReactivityDoc from "../../../node_modules/ueca-react/docs/Arrays and Reactivity in UECA-React.md?raw";
-import modelCachingDoc from "../../../node_modules/ueca-react/docs/Model Caching in UECA-React.md?raw";
-import componentExtensionDoc from "../../../node_modules/ueca-react/docs/Component Extension in UECA-React.md?raw";
-import specializedFactoriesDoc from "../../../node_modules/ueca-react/docs/Specialized Component Factories in UECA-React.md?raw";
-import tracingDoc from "../../../node_modules/ueca-react/docs/Tracing in UECA-React.md?raw";
-import codeTemplateDoc from "../../../node_modules/ueca-react/docs/code-template.md?raw";
+// The guide moved from docs/ to docs/raw/original/ in ueca-react 3.0. Order and titles below
+// follow docs/raw/index.md, "UECA-React Programming Guide".
+import introductionDoc from "../../../node_modules/ueca-react/docs/raw/original/Introduction to UECA-React.md?raw";
+import technologyDoc from "../../../node_modules/ueca-react/docs/raw/original/Technology of UECA-React.md?raw";
+import componentMentalModelDoc from "../../../node_modules/ueca-react/docs/raw/original/Component Mental Model in UECA-React.md?raw";
+import componentIntegrationModelDoc from "../../../node_modules/ueca-react/docs/raw/original/Component Integration Model in UECA-React.md?raw";
+import introComponentsDoc from "../../../node_modules/ueca-react/docs/raw/original/Introduction to UECA-React Components.md?raw";
+import componentIdsDoc from "../../../node_modules/ueca-react/docs/raw/original/Component IDs in UECA-React.md?raw";
+import lifecycleHooksDoc from "../../../node_modules/ueca-react/docs/raw/original/Lifecycle Hooks in UECA-React.md?raw";
+import stateManagementDoc from "../../../node_modules/ueca-react/docs/raw/original/State Management in UECA-React.md?raw";
+import propertyBindingsDoc from "../../../node_modules/ueca-react/docs/raw/original/Property Bindings in UECA-React.md?raw";
+import onChangeEventsDoc from "../../../node_modules/ueca-react/docs/raw/original/Automatic onChange Events in UECA-React.md?raw";
+import onChangingEventsDoc from "../../../node_modules/ueca-react/docs/raw/original/Automatic onChanging Events in UECA-React.md?raw";
+import onPropEventsDoc from "../../../node_modules/ueca-react/docs/raw/original/Automatic onPropChange and onPropChanging Events in UECA-React.md?raw";
+import messageBusDoc from "../../../node_modules/ueca-react/docs/raw/original/Message Bus in UECA-React.md?raw";
+import arraysReactivityDoc from "../../../node_modules/ueca-react/docs/raw/original/Arrays and Reactivity in UECA-React.md?raw";
+import modelCachingDoc from "../../../node_modules/ueca-react/docs/raw/original/Model Caching in UECA-React.md?raw";
+import componentExtensionDoc from "../../../node_modules/ueca-react/docs/raw/original/Component Extension in UECA-React.md?raw";
+import specializedFactoriesDoc from "../../../node_modules/ueca-react/docs/raw/original/Specialized Component Factories in UECA-React.md?raw";
+import tracingDoc from "../../../node_modules/ueca-react/docs/raw/original/Tracing in UECA-React.md?raw";
+import errorHandlingDoc from "../../../node_modules/ueca-react/docs/raw/original/Error Handling in UECA-React.md?raw";
+import utilityFunctionsDoc from "../../../node_modules/ueca-react/docs/raw/original/Utility Functions in UECA-React.md?raw";
+import codeTemplateDoc from "../../../node_modules/ueca-react/docs/raw/original/code-template.md?raw";
 
 type DocArticle =
     | "introduction"
@@ -40,6 +44,8 @@ type DocArticle =
     | "component-extension"
     | "specialized-factories"
     | "tracing"
+    | "error-handling"
+    | "utility-functions"
     | "code-template";
 
 type DocRoutePath =
@@ -61,6 +67,8 @@ type DocRoutePath =
     | "/docs/component-extension"
     | "/docs/specialized-factories"
     | "/docs/tracing"
+    | "/docs/error-handling"
+    | "/docs/utility-functions"
     | "/docs/code-template";
 
 type DocsScreenStruct = ScreenBaseStruct<{
@@ -151,6 +159,10 @@ function useDocsScreen(params?: DocsScreenParams): DocsScreenModel {
                 return "/docs/specialized-factories";
             case "tracing":
                 return "/docs/tracing";
+            case "error-handling":
+                return "/docs/error-handling";
+            case "utility-functions":
+                return "/docs/utility-functions";
             case "code-template":
                 return "/docs/code-template";
         }
@@ -194,6 +206,10 @@ function useDocsScreen(params?: DocsScreenParams): DocsScreenModel {
                 return "Specialized Component Factories";
             case "tracing":
                 return "Tracing";
+            case "error-handling":
+                return "Error Handling";
+            case "utility-functions":
+                return "Utility Functions";
             case "code-template":
                 return "Standard Code Template";
         }
@@ -237,6 +253,10 @@ function useDocsScreen(params?: DocsScreenParams): DocsScreenModel {
                 return specializedFactoriesDoc;
             case "tracing":
                 return tracingDoc;
+            case "error-handling":
+                return errorHandlingDoc;
+            case "utility-functions":
+                return utilityFunctionsDoc;
             case "code-template":
                 return codeTemplateDoc;
         }

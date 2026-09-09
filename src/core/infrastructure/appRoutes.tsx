@@ -26,6 +26,8 @@ const screenRoutes = {
     "/docs/component-extension": () => <DocsScreen id={"docsScreen"} article={"component-extension"} />,
     "/docs/specialized-factories": () => <DocsScreen id={"docsScreen"} article={"specialized-factories"} />,
     "/docs/tracing": () => <DocsScreen id={"docsScreen"} article={"tracing"} />,
+    "/docs/error-handling": () => <DocsScreen id={"docsScreen"} article={"error-handling"} />,
+    "/docs/utility-functions": () => <DocsScreen id={"docsScreen"} article={"utility-functions"} />,
     "/docs/code-template": () => <DocsScreen id={"docsScreen"} article={"code-template"} />,
 };
 

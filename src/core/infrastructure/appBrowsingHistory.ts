@@ -80,10 +80,19 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
             }
         },
 
-        init: async () => {
-            const appInfo = await model.bus.unicast("App.GetInfo", undefined);
-            model.__appTitle = appInfo?.appName;
+        // The active path is derived from window.location alone, so it is established here, in the
+        // one-time synchronous constr hook. AppRouter reads it from its own init to resolve the
+        // startup route, and init hooks are not ordered between models: doing this in init instead
+        // left the router asking for a path that had not been computed yet, which dropped every
+        // deep link onto the default screen.
+        constr: () => {
             model.syncWithBrowser();
+        },
+
+        init: async () => {
+            const appInfo = await model.bus.unicast("App.GetInfo");
+            model.__appTitle = appInfo?.appName;
+            _syncDocumentTitle();
         }
     }
 
@@ -98,6 +107,18 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
         }
         const path = window.location.pathname.substring(model.__baseURL.length);
         model.__activePath = path + decodeURIComponent(window.location.search);
+        _syncDocumentTitle();
+    }
+
+    function _syncDocumentTitle() {
+        // The app title arrives asynchronously in init, after the first path sync. Leave the title
+        // from index.html alone until it is known, then apply it.
+        if (!model.__appTitle) {
+            return;
+        }
+        const path = window.location.pathname.startsWith(model.__baseURL)
+            ? window.location.pathname.substring(model.__baseURL.length)
+            : "";
         window.document.title = path ? `${model.__appTitle}: ${path}` : model.__appTitle;
     }
 

@@ -52,6 +52,7 @@ function useAppUI(params?: AppUIParams): AppUIModel {
                     <model.dialogManager.View />
                     <model.alertManager.View />
                 </Col>
+                <UECA.TraceViewerButton />
             </ErrorFallback>
     };
 

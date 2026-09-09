@@ -30,6 +30,8 @@ type AppMenuStruct = UIBaseStruct<{
         componentExtensionMenuItem: NavItemModel;
         specializedFactoriesMenuItem: NavItemModel;
         tracingMenuItem: NavItemModel;
+        errorHandlingMenuItem: NavItemModel;
+        utilityFunctionsMenuItem: NavItemModel;
         codeTemplateMenuItem: NavItemModel;
     }
 }>;
@@ -74,6 +76,8 @@ function useAppMenu(params?: AppMenuParams): AppMenuModel {
                     model.componentExtensionMenuItem,
                     model.specializedFactoriesMenuItem,
                     model.tracingMenuItem,
+                    model.errorHandlingMenuItem,
+                    model.utilityFunctionsMenuItem,
                     model.codeTemplateMenuItem
                 ]
             }),
@@ -148,6 +152,14 @@ function useAppMenu(params?: AppMenuParams): AppMenuModel {
             tracingMenuItem: useMenuItem({
                 text: "Tracing",
                 route: { path: "/docs/tracing" }
+            }),
+            errorHandlingMenuItem: useMenuItem({
+                text: "Error Handling",
+                route: { path: "/docs/error-handling" }
+            }),
+            utilityFunctionsMenuItem: useMenuItem({
+                text: "Utility Functions",
+                route: { path: "/docs/utility-functions" }
             }),
             codeTemplateMenuItem: useMenuItem({
                 text: "Standard Code Template",
