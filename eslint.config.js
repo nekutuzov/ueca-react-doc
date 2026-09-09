@@ -8,8 +8,7 @@ export default tseslint.config(
   {
     ignores: [
       'dist',
-      // Build output committed for GitHub Pages, and MSW's generated worker - neither is ours to lint.
-      'docs',
+      // MSW's generated worker - not ours to lint or edit.
       'public/mockServiceWorker.js',
       'src/screens/buttons/**',
       'src/screens/inputs/**',
