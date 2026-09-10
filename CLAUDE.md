@@ -137,6 +137,13 @@ something synchronously available (here, `window.location`) rather than from an 
   numbering survives the collapse to an icon rail.
 - Screens compose their own content region: `useCRUDScreen({ contentPaddings: "none" })` forwards
   to `ScreenLayout`, which is how the docs article and the home hero own their padding.
+- An article page is a **band of fixed design width, centred** — `--band-w` (`--article-w` 900 +
+  `--toc-w` 220) with `margin-inline: auto` on `.docs-layout`. Prose is capped at `--measure`
+  and the widest shipped code block fits `--article-w`, so past ~1400px there is nothing extra
+  width can be spent on; left-aligned, the whole surplus piled up in one void on the right.
+  The home hero centres the same way (`max-width: 940px`). The top bar stays full-bleed, so on a
+  wide window the breadcrumb trail no longer starts at the article's left edge — that is the
+  accepted trade, not an oversight.
 
 ## Theming
 

@@ -4,13 +4,20 @@
     align-items: flex-start;
     width: 100%;
     min-width: 0;
+    /* The article and its section list are a band of fixed design width, not a fluid
+       column: prose is capped at the reading measure and the widest code block still
+       fits --article-w, so past ~1400px there is nothing the extra width can be spent
+       on. Centring the band splits that slack into two gutters instead of leaving all
+       of it in one void on the right. */
+    max-width: var(--band-w);
+    margin-inline: auto;
 }
 
 .docs-column {
     /* Wider than the ~72ch prose measure set in theme.css, on purpose: prose stays at the
        measure while code blocks and tables get the extra room. */
     min-width: 0;
-    max-width: 900px;
+    max-width: var(--article-w);
     padding: var(--space-large) var(--space-medium) var(--space-huge);
 }
 

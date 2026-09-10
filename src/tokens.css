@@ -64,6 +64,11 @@
     --sidebar-w-collapsed: 60px;
     --topbar-h: 52px;
     --toc-w: 220px;
+    /* The article column: wider than --measure so code blocks and tables get room the
+       prose does not need. --band-w is the article page's whole design width; past it
+       there is nothing left to widen, so the page centres instead of growing. */
+    --article-w: 900px;
+    --band-w: calc(var(--article-w) + var(--toc-w));
 
     /* ---- Icon sizes ---- */
     --icon-sm: 14px;
