@@ -16,7 +16,7 @@
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.02857em;
-    color: rgba(0, 0, 0, 0.6);
+    color: var(--ink-dim);
     transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
@@ -25,7 +25,7 @@
 }
 
 .ueca-tab:hover:not(:disabled) {
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: var(--ink-hover);
 }
 
 .ueca-tab:disabled {
@@ -35,17 +35,17 @@
 }
 
 .ueca-tab.selected {
-    color: var(--tab-selected-color, #1976d2);
-    border-bottom-color: var(--tab-selected-color, #1976d2);
+    color: var(--tab-selected-color, var(--accent));
+    border-bottom-color: var(--tab-selected-color, var(--accent));
 }
 
 .ueca-tab.invalid {
-    color: var(--tab-error-color, #d32f2f);
+    color: var(--tab-error-color, var(--error));
 }
 
 .ueca-tab.selected.invalid {
-    color: var(--tab-error-color, #d32f2f);
-    border-bottom-color: var(--tab-error-color, #d32f2f);
+    color: var(--tab-error-color, var(--error));
+    border-bottom-color: var(--tab-error-color, var(--error));
 }
 
 /* Icon positioning */
@@ -100,9 +100,9 @@
 }
 
 .ueca-tabs-vertical .ueca-tab.selected {
-    border-right-color: var(--tab-selected-color, #1976d2);
+    border-right-color: var(--tab-selected-color, var(--accent));
 }
 
 .ueca-tabs-vertical .ueca-tab.selected.invalid {
-    border-right-color: #d32f2f;
+    border-right-color: var(--error);
 }

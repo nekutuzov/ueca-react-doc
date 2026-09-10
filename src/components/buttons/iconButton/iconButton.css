@@ -19,11 +19,11 @@
 }
 
 .ueca-icon-button:hover:not(:disabled) {
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: var(--ink-hover);
 }
 
 .ueca-icon-button:active:not(:disabled) {
-    background-color: rgba(0, 0, 0, 0.12);
+    background-color: var(--active);
 }
 
 /* Size variants */

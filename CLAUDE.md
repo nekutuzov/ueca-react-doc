@@ -52,6 +52,13 @@ changelog and in the skill's pitfalls reference; these are the ones this codebas
 - **`unicast` and `castTo` expect exactly one subscriber** and throw *before dispatching* if more than
   one matches. Zero subscribers is not an error — `unicast` returns `undefined`, which is why an
   ordering bug looks like a missing value rather than a crash (see *Startup ordering* below).
+- **A message with more than one legitimate subscriber must be a `broadcast`.** The router's
+  `App.Router.BeforeRouteChange` / `AfterRouteChange` are the case in this app: the active
+  `CRUDScreen` vetoes on unsaved changes and `AppTooltipManager` closes its bubble, so a `unicast`
+  throws the moment both are mounted. `broadcast(null, …)` returns **an array of every answer**;
+  the guard allows navigation unless one of them is explicitly `false`
+  (`answers.every(a => a !== false)`). Do not test for truthiness — a handler that just reacts and
+  returns nothing would then freeze routing app-wide, with no error to trace it by.
 - **`draw` and `erase` must be synchronous.** Move async work to `mount` / `unmount`.
 - **Two JSX siblings may not share an `id`.** An `id` is identity, cache key, bus address and DOM id at
   once. Derive a list child's id from its item.
@@ -77,6 +84,10 @@ onto the Home screen**.
 The rule: **if another model's `init` reads it, produce it in `constr`** — and derive it from
 something synchronously available (here, `window.location`) rather than from an awaited message.
 
+> **This is a deliberate divergence from MLWebApp**, whose `AppBrowsingHistory` calls
+> `syncWithBrowser()` from `init`, *after* awaiting `App.GetInfo`. Porting that here reintroduces
+> the deep-link bug above. Keep `constr`. Everything else in that module tracks MLWebApp.
+
 ## Non-Negotiable Rules
 
 - Use UECA component model patterns (props, children, methods, events, message bus).
@@ -98,9 +109,13 @@ something synchronously available (here, `window.location`) rather than from an 
   - Sidebar menu is the docs index.
   - Active route highlighting must remain reactive via `_activeRoute`.
 - `src/screens/home/homeScreen.tsx`
-  - Greeting content only.
+  - Greeting content only. The page itself is `homeHero/homeHero.tsx`, whose signature element is
+    the annotated struct spine (`props → children → methods → events → messages → View`). Its copy
+    tracks `src/screens/home/welcome.md`, which is kept as the source of that wording.
 - `src/screens/docs/docsScreen.tsx`
-  - Dedicated markdown article viewer screen.
+  - Dedicated markdown article viewer screen. Composes the article with `DocsToc`
+    ("On this page", parsed from the markdown source) and `DocsPager` (prev/next, ordered by
+    `DOC_ORDER`).
 
 ## Current Implementation Snapshot (September 2026, ueca-react 3.0.1)
 
@@ -112,10 +127,96 @@ something synchronously available (here, `window.location`) rather than from an 
   - Article routes: `/docs/*` (21 entries mapped from `docs/raw/index.md`)
 - `src/core/appLayout/appSideBar.tsx` currently uses:
   - `useAppMenu` imported from `./appMenu`
-  - Width behavior: collapsed `60`, expanded `400`
-  - Header title: `UECA React Documentation`, version label `UECA-React 3.0`
+  - Width behavior: collapsed `var(--sidebar-w-collapsed)` (60), expanded `var(--sidebar-w)` (300)
+  - Header: logo link, `UECA-React` wordmark, `3.0` version chip
+  - Collapses itself below `NARROW_VIEWPORT` (860px) via a `mount` resize listener, and only on
+    the crossing — so a deliberate toggle survives a resize on one side of the breakpoint
 - `src/core/infrastructure/appUI.tsx` mounts `<UECA.TraceViewerButton />`. It is a lazily-loaded
-  chunk, so a closed viewer costs the bundle nothing.
+  chunk, so a closed viewer costs the bundle nothing. **Keep it** — it is there on purpose.
+- Menu items carry a chapter `number` (`01`–`21`) rendered in the NavItem icon slot, so the
+  numbering survives the collapse to an icon rail.
+- Screens compose their own content region: `useCRUDScreen({ contentPaddings: "none" })` forwards
+  to `ScreenLayout`, which is how the docs article and the home hero own their padding.
+
+## Theming
+
+Two themes, `ueca-light` and `ueca-dark`, switched by `<html data-theme>`. Three CSS layers load
+from `main.tsx` in order:
+
+| File | Holds |
+| --- | --- |
+| `src/tokens.css` | everything that is **not** colour — type scale, spacing, radii, motion, z-ladder, and the `.ueca-*` type roles |
+| `src/themes.css` | the two palettes plus the derived tokens (`--hover`, `--focus-ring`, status ramps) |
+| `src/theme.css` | body surface and the whole `.wmde-markdown` article retheme, including the Prism syntax colours |
+
+The palette is derived from the four-piece logo: **blue is the accent (action), amber is
+`--marker` (structure only — spine markers, chapter numbers; never interactive)**, green and coral
+are success and error.
+
+`resolvePaletteColor` in `appTheme.ts` returns `var(--…)` rather than a literal, so all ~17 palette
+consumers follow a theme switch with no re-render. **Change colours in `themes.css`, not there.**
+
+`AppThemeManager` (a `useBase` service, owned by `Application`) resolves the theme in **`constr`**,
+stamps `<html data-theme>` / `data-color-mode`, persists to `localStorage`, and answers the
+`App.Theme.*` messages. `index.html` carries a matching no-flash script — keep its key and default
+in sync with `THEME_STORAGE_KEY` / `preferredThemeId()`.
+
+## Layout gotcha: inline styles beat your stylesheet
+
+`Block` / `Row` / `Col` in `src/components/layout/layout.tsx` write `display`, `overflow`, `width`
+and `padding` as **inline styles**, and `overflow` defaults to `visible` when the prop is omitted.
+A CSS class can never override those. So:
+
+- to make a `Col` scroll, pass `overflow={"auto"}` — a stylesheet rule will not take;
+- an element that must hide at a breakpoint (`display: none`) cannot be a `Col` — the docs TOC is a
+  plain `<aside>` for exactly this reason.
+
+Flex children also need `min-width: 0` / `min-height: 0` to shrink; without them a wide code block
+widens the whole page instead of scrolling inside its own `pre` — and the sidebar menu grows past
+the rail instead of showing a scrollbar.
+
+## Tooltips
+
+**Never use the native `title` attribute.** There is one tooltip in the app, `AppTooltipManager`,
+owned by `AppUI` and driven over the bus (`App.Tooltip.Show` / `Hide`). A per-trigger tooltip would
+strand a bubble on screen whenever its trigger disappears mid-hover; the singleton has nothing to
+orphan.
+
+To give any element a tooltip, spread the base-hook helper:
+
+```tsx
+<button {...model.tooltipProps("Switch to dark theme")}>…</button>
+```
+
+- It wires `mouseenter`/`mouseleave` **and** `focus`/`blur`, so keyboard users get it too — but only
+  on `:focus-visible`, or returning from another tab would pop a tooltip under no pointer.
+- `token` is the trigger's `htmlId()`. A `Hide` naming anyone but the trigger currently showing is
+  ignored, which is what stops a fast sweep across the top bar from closing the bubble the element
+  now under the pointer just opened.
+- Placement is automatic: `positionOverlay` in `core/misc/overlayPosition.ts` (a pure function of
+  rectangles — no DOM) flips to whichever side has room and slides the bubble back inside the
+  viewport, and the arrow offset is recomputed so it still points at the trigger.
+- An icon-only control still needs an **`aria-label`** — the tooltip is a visual affordance, not an
+  accessible name. `IconButton` sets it from `title`; pass `tooltipView` when the bubble needs more
+  than a string.
+- A second, dimmed mono line comes from wrapping content in `<span className="ueca-tooltip-detail">`
+  — use it for a destination or a shortcut, not for a second sentence.
+- Colour is the one place the two themes deliberately diverge (`--tooltip-*` in `themes.css`): light
+  gets an inverted ink chip, dark a raised bordered plane. A `--surface` bubble is invisible on a
+  `--surface` sidebar; an inverted near-white one glares on a dark page.
+
+## External links
+
+**Every link to another site opens in a new tab.** Three routes, all already wired:
+
+- UECA components — `model.openNewTab({ path })`, or `newTab: true` on a `NavLink`.
+- Markdown articles — `markdownPreview`'s `draw` stamps `target="_blank"` + `rel="noopener
+  noreferrer"` onto any anchor whose resolved `a.protocol` is http(s) and whose `a.hostname` differs
+  from ours. Reading the resolved properties rather than parsing the href is what leaves relative
+  article links, in-page fragments and `mailto:` alone.
+- `AppBrowsingHistory.open(route, true)` passes `noopener,noreferrer` to `window.open` — unlike
+  `<a target="_blank">`, `window.open` does not imply it, and without it the opened page can
+  navigate this one.
 
 When updating docs navigation, preserve this docs-first shape unless explicitly asked to redesign
 layout behavior.
@@ -128,7 +229,9 @@ When adding or changing docs entries:
 3. Add matching route in `appRoutes.tsx`.
 4. Add matching menu item in `appMenu.tsx`.
 5. Add corresponding markdown source mapping in `docsScreen.tsx` — the `DocArticle` union, the
-   `DocRoutePath` union, and all three `switch` statements.
+   `DocRoutePath` union, all three `switch` statements, and the `DOC_ORDER` array that drives
+   prev/next. (`_articleTitle` and `_articleRoutePath` take an optional article argument so the
+   pager can ask about a neighbour; leave that signature alone.)
 6. Add the article's file name to `resolveDocPath` in `markdownPreview.tsx`, so cross-links from
    other articles reach it.
 

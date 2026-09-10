@@ -48,6 +48,9 @@ type CRUDScreenProps = {
     hiddenToolsView: React.ReactNode;
     readonly: boolean;
     actionButtonText: string;
+    // Forwarded to ScreenLayout so a screen that lays out its own content region - the docs
+    // article and its aside, for one - is not also paying the layout's default padding.
+    contentPaddings: ScreenLayoutModel["contentPaddings"];
 }
 
 type CRUDScreenMethods = {
@@ -85,6 +88,7 @@ function useCRUDScreen(params?: CRUDScreenParams): CRUDScreenModel {
             hiddenToolsView: undefined,
             readonly: false,
             actionButtonText: undefined,
+            contentPaddings: "default",
             modelsToValidate: UECA.bind(() => model.validator, "modelsToValidate"),
             _state: {
                 dataNew: false,
@@ -111,7 +115,8 @@ function useCRUDScreen(params?: CRUDScreenParams): CRUDScreenModel {
                 breadcrumbs: () => model.breadcrumbs,
                 toolsView: () => model._toolsView(),
                 hiddenToolsView: () => _hiddenToolsView(),
-                contentView: () => model.contentView
+                contentView: () => model.contentView,
+                contentPaddings: () => model.contentPaddings
             }),
 
             validator: useValidator(),

@@ -63,8 +63,17 @@ function useNavItem(params?: NavItemParams): NavItemModel {
 
         methods: {
             _linkView: () => {
+                // Only when the label is hidden. With the text on screen a tooltip would just
+                // repeat it. Mouse only: focus lands on the ancestor <a>, which a descendant
+                // cannot observe, so keyboard users get the aria-label there instead.
+                const tip = model.mode === "icon-only" && model.text
+                    ? model.tooltipProps(model.text, { placement: "right" })
+                    : undefined;
+
                 return (
                     <Block
+                        onMouseEnter={tip?.onMouseEnter}
+                        onMouseLeave={tip?.onMouseLeave}
                         className={`ueca-nav-item ${model.active ? "active" : ""} ${model.disabled ? "disabled" : ""}`}
                         height={model.extent?.height}
                         width={model.extent?.width}

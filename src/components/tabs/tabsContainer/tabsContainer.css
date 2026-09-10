@@ -16,13 +16,13 @@
 .ueca-tabs-header {
     display: flex;
     position: relative;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    border-bottom: 1px solid var(--border);
 }
 
 .ueca-tabs-vertical .ueca-tabs-header {
     flex-direction: column;
     border-bottom: none;
-    border-right: 1px solid rgba(0, 0, 0, 0.12);
+    border-right: 1px solid var(--border);
 }
 
 /* Tabs wrapper (for scrolling) */
@@ -104,15 +104,15 @@
     width: 40px;
     min-width: 40px;
     flex-shrink: 0;
-    background: white;
+    background: var(--surface);
     border: none;
     cursor: pointer;
-    color: rgba(0, 0, 0, 0.54);
+    color: var(--ink-dim);
     transition: color 0.2s ease;
 }
 
 .ueca-tabs-scroll-button:hover:not(:disabled) {
-    color: rgba(0, 0, 0, 0.87);
+    color: var(--ink);
 }
 
 .ueca-tabs-scroll-button:disabled {

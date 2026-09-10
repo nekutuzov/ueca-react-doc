@@ -1,0 +1,64 @@
+/* Screen chrome: the top bar above every screen, and the scrolling content region. */
+
+.app-topbar {
+    background: var(--surface);
+    border-bottom: var(--hairline) solid var(--border);
+    /* The bar is the only thing between the article and the window edge, so it stays put
+       while the content scrolls under it. */
+    flex: 0 0 auto;
+}
+
+/* The trail stays on one line. The bar has a fixed height, so a wrapped second line escapes it
+   and prints over the top of the article - which is what happens at mobile widths. */
+.app-topbar .ueca-breadcrumbs {
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    font-size: var(--text-sm);
+}
+
+.app-topbar .ueca-breadcrumbs > * {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.app-topbar .ueca-breadcrumbs-separator svg {
+    width: var(--icon-md);
+    height: var(--icon-md);
+}
+
+/* The last crumb is the current page: rendered disabled, but it should read as where you are
+   rather than as something switched off. */
+.app-topbar .ueca-nav-link-disabled {
+    color: var(--ink);
+}
+
+/* A hairline between the screen's own tools and the app-level controls (theme, contacts),
+   so the two groups do not read as one row of unrelated buttons. */
+.app-topbar-divider {
+    width: var(--hairline);
+    height: 22px;
+    background: var(--border);
+    flex: 0 0 auto;
+}
+
+.app-topbar .ueca-icon-button {
+    color: var(--ink-dim);
+}
+
+.app-topbar .ueca-icon-button:hover:not(:disabled) {
+    color: var(--accent);
+}
+
+/* min-width:0 is what actually fixes the horizontal page scrollbar: without it this flex
+   child refuses to shrink below its widest content (a long code line), so the whole column
+   grows instead of the code block scrolling inside itself. */
+.app-content {
+    min-width: 0;
+    /* A flex child defaults to min-height:auto, which lets it grow past the viewport instead
+       of scrolling. overflow itself is set as a prop in the JSX - see the note there. */
+    min-height: 0;
+    overscroll-behavior: contain;
+}

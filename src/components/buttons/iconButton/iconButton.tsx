@@ -15,6 +15,10 @@ type IconButtonStruct = UIBaseStruct<{
         iconView: React.ReactNode;
         size: IconSize;
         title: string;
+        // Richer tooltip content when a plain string is not enough - a destination or a
+        // shortcut on a `.ueca-tooltip-detail` line, say. `title` stays the accessible name,
+        // which must remain a string.
+        tooltipView: React.ReactNode;
     };
 
     events: {
@@ -40,6 +44,7 @@ function useIconButton(params?: IconButtonParams): IconButtonModel {
             iconView: undefined,
             size: "medium",
             title: undefined,
+            tooltipView: undefined,
         },
 
         methods: {
@@ -81,7 +86,13 @@ function useIconButton(params?: IconButtonParams): IconButtonModel {
                     className={`ueca-icon-button ueca-icon-button-${model.size}`}
                     disabled={model.disabled}
                     onClick={model.click}
-                    title={model.title}
+                    // aria-label, not title: the app's own tooltip replaces the native bubble, but
+                    // the button still needs an accessible name - it has no text of its own.
+                    // Placement is left to the manager, which flips to whichever side has room.
+                    aria-label={model.title}
+                    {...(model.tooltipView || model.title
+                        ? model.tooltipProps(model.tooltipView ?? model.title)
+                        : {})}
                     style={{
                         ...(model.color !== "inherit" ? {
                             "--icon-button-color": colorClass

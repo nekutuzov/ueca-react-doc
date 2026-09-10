@@ -1,6 +1,8 @@
 import * as UECA from "ueca-react";
 import { AnyRoute } from "@components";
 import { AppRoute } from "./appRoutes";
+import { ThemeDescriptor, ThemeId, ThemeMode } from "./appTheme";
+import { AnchorRect, Placement } from "../misc/overlayPosition";
     
 // Application Messages: "message-type": { in: <parameter-type>, out: <parameter-type> }
 // Properties "in" and "out" describe value type of input and output parameters. Both properties are optional.
@@ -29,12 +31,34 @@ type ScreenMessages = {
 type MiscMessages = {
     "App.UnhandledException": { in: Error };
 
+    // Tooltip - ONE instance lives on AppUI and every trigger drives it over the bus, so no
+    // component owns tooltip DOM of its own. `token` identifies the trigger: Hide is ignored
+    // unless it names the trigger currently showing, which is what stops a late hide from one
+    // target closing the tooltip another target has just opened.
+    "App.Tooltip.Show": {
+        in: {
+            token: string;
+            anchor: AnchorRect;
+            contentView: React.ReactNode;
+            placement?: Placement;
+            delay?: number;
+        }
+    };
+    "App.Tooltip.Hide": { in: { token: string } };
+
     "BusyDisplay.Set": { in: boolean };
     "BusyDisplay.Clear": NoParamsNoReturn;
     "BusyDisplay.SetVisibility": { in: boolean };
 
-    "App.Theme.GetMode": { out: "light" | "dark" };
-    "App.Theme.SetMode": { in: "light" | "dark" };
+    "App.Theme.GetMode": { out: ThemeMode };
+    "App.Theme.SetMode": { in: ThemeMode };
+    "App.Theme.GetTheme": { out: ThemeId };
+    "App.Theme.SetTheme": { in: ThemeId };
+    "App.Theme.ToggleTheme": { out: ThemeId };
+    "App.Theme.ListThemes": { out: ThemeDescriptor[] };
+    // Broadcast after the active theme changes, so anything showing the current
+    // mode (the top-bar toggle) stays in sync without polling.
+    "App.Theme.Changed": { in: { theme: ThemeId, mode: ThemeMode } };
 
     "App.BrowsingHistory.GetActivePath": { out: string };
     "App.BrowsingHistory.Open": { in: { path: AnyRoute | string, newTab?: boolean } };

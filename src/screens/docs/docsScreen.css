@@ -1,0 +1,21 @@
+/* Article page: the prose column, with the section list held aside on the right. */
+
+.docs-layout {
+    align-items: flex-start;
+    width: 100%;
+    min-width: 0;
+}
+
+.docs-column {
+    /* Wider than the ~72ch prose measure set in theme.css, on purpose: prose stays at the
+       measure while code blocks and tables get the extra room. */
+    min-width: 0;
+    max-width: 900px;
+    padding: var(--space-large) var(--space-medium) var(--space-huge);
+}
+
+@media (max-width: 700px) {
+    .docs-column {
+        padding: var(--space-medium) var(--space-small) var(--space-large);
+    }
+}

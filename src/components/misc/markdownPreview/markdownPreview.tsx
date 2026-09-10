@@ -2,6 +2,7 @@
 import * as UECA from "ueca-react";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import { Col, UIBaseModel, UIBaseParams, UIBaseStruct, useUIBase } from "@components";
+import "./markdownPreview.css";
 
 type MarkdownPreviewStruct = UIBaseStruct<{
     props: {
@@ -21,9 +22,33 @@ function useMarkdownPreview(params?: MarkdownPreviewParams): MarkdownPreviewMode
             skipHtml: false,
         },
 
+        // Every link that leaves the site opens in its own tab, so a reader never loses their
+        // place in the guide. Stamped onto the elements rather than handled on click, so the
+        // affordance is real - middle-click, the context menu and the status bar all agree - and
+        // rel closes the reverse-tabnabbing hole that target="_blank" opens on its own.
+        // Synchronous, as draw requires.
+        draw: () => {
+            const root = document.getElementById(model.htmlId());
+            if (!root) {
+                return;
+            }
+            root.querySelectorAll("a[href]").forEach((el) => {
+                const a = el as HTMLAnchorElement;
+                // a.protocol / a.hostname are the RESOLVED values, so this leaves relative
+                // article links, in-page fragments and mailto: alone without parsing anything.
+                const isWeb = a.protocol === "http:" || a.protocol === "https:";
+                if (!isWeb || a.hostname === window.location.hostname || a.target === "_blank") {
+                    return;
+                }
+                a.target = "_blank";
+                a.rel = "noopener noreferrer";
+            });
+        },
+
         View: () => (
-            <Col 
-                id={model.htmlId()} 
+            <Col
+                id={model.htmlId()}
+                className="markdown-host"
                 fill
                 onClick={async (e: React.MouseEvent) => {
                     const target = e.target as HTMLElement;

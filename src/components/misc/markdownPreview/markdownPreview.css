@@ -1,0 +1,9 @@
+/* Host element around @uiw/react-markdown-preview. The article's own typography lives in
+   src/theme.css, under .wmde-markdown; this file only handles the box it sits in. */
+
+.markdown-host {
+    /* Without this the host refuses to shrink below its widest line inside a flex column,
+       so a long code fence widens the page instead of scrolling inside its own block. */
+    min-width: 0;
+    max-width: 100%;
+}

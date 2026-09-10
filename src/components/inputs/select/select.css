@@ -11,12 +11,12 @@
 .ueca-select-label {
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--select-color, rgba(0, 0, 0, 0.87));
+    color: var(--select-color, var(--ink));
     margin-bottom: 4px;
 }
 
 .ueca-select-required {
-    color: #d32f2f;
+    color: var(--error);
 }
 
 /* Select input base */
@@ -25,16 +25,16 @@
     font-size: 1rem;
     padding: 12px 14px;
     border-radius: 4px;
-    border: 1px solid rgba(0, 0, 0, 0.23);
+    border: 1px solid var(--border);
     outline: none;
     transition: all 0.2s ease;
     background-color: transparent;
-    color: rgba(0, 0, 0, 0.87);
+    color: var(--ink);
     width: 100%;
     box-sizing: border-box;
     cursor: pointer;
     appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgba(0,0,0,0.54)'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23808a94'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
     background-position: right 8px center;
     background-size: 24px;
@@ -42,16 +42,16 @@
 }
 
 .ueca-select-input::placeholder {
-    color: rgba(0, 0, 0, 0.38);
+    color: var(--ink-disabled);
     font-style: italic;
 }
 
 .ueca-select-input:hover:not(:disabled) {
-    border-color: rgba(0, 0, 0, 0.87);
+    border-color: var(--ink);
 }
 
 .ueca-select-input:focus {
-    border-color: var(--select-color, #1976d2);
+    border-color: var(--select-color, var(--accent));
     border-width: 2px;
     padding: 11px 13px 11px 13px;
     padding-right: 39px;
@@ -59,51 +59,51 @@
 }
 
 .ueca-select-input:disabled {
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: var(--ink-hover);
     cursor: not-allowed;
-    color: rgba(0, 0, 0, 0.38);
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgba(0,0,0,0.26)'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+    color: var(--ink-disabled);
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a8b0b8'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
 }
 
 /* Option styling */
 .ueca-select-input option {
     padding: 8px;
-    color: rgba(0, 0, 0, 0.87);
+    color: var(--ink);
 }
 
 .ueca-select-input option:disabled {
-    color: rgba(0, 0, 0, 0.38);
+    color: var(--ink-disabled);
 }
 
 .ueca-select-input option[value=""]:first-child {
     font-style: italic;
-    color: rgba(0, 0, 0, 0.38);
+    color: var(--ink-disabled);
 }
 
 /* Outlined variant (default) */
 .ueca-select-outlined .ueca-select-input {
-    border: 1px solid rgba(0, 0, 0, 0.23);
+    border: 1px solid var(--border);
     background-color: transparent;
 }
 
 /* Filled variant */
 .ueca-select-filled .ueca-select-input {
     border: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.42);
+    border-bottom: 1px solid var(--border);
     border-radius: 4px 4px 0 0;
-    background-color: rgba(0, 0, 0, 0.06);
+    background-color: var(--ink-hover);
     padding: 16px 12px 8px;
     padding-right: 40px;
 }
 
 .ueca-select-filled .ueca-select-input:hover:not(:disabled) {
-    background-color: rgba(0, 0, 0, 0.09);
+    background-color: var(--active);
 }
 
 .ueca-select-filled .ueca-select-input:focus {
-    background-color: rgba(0, 0, 0, 0.09);
+    background-color: var(--active);
     border-bottom-width: 2px;
-    border-bottom-color: var(--select-color, #1976d2);
+    border-bottom-color: var(--select-color, var(--accent));
     padding: 16px 12px 7px;
     padding-right: 39px;
 }
@@ -111,54 +111,54 @@
 /* Standard variant */
 .ueca-select-standard .ueca-select-input {
     border: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.42);
+    border-bottom: 1px solid var(--border);
     border-radius: 0;
     padding: 8px 0;
     padding-right: 32px;
 }
 
 .ueca-select-standard .ueca-select-input:hover:not(:disabled) {
-    border-bottom-color: rgba(0, 0, 0, 0.87);
+    border-bottom-color: var(--ink);
 }
 
 .ueca-select-standard .ueca-select-input:focus {
     border-bottom-width: 2px;
-    border-bottom-color: var(--select-color, #1976d2);
+    border-bottom-color: var(--select-color, var(--accent));
     padding-bottom: 7px;
     padding-right: 31px;
 }
 
 /* Error state */
 .ueca-select-error .ueca-select-input {
-    border-color: #d32f2f;
+    border-color: var(--error);
 }
 
 .ueca-select-error .ueca-select-input:focus {
-    border-color: #d32f2f;
+    border-color: var(--error);
 }
 
 .ueca-select-error.ueca-select-filled .ueca-select-input {
-    border-bottom-color: #d32f2f;
+    border-bottom-color: var(--error);
 }
 
 .ueca-select-error.ueca-select-standard .ueca-select-input {
-    border-bottom-color: #d32f2f;
+    border-bottom-color: var(--error);
 }
 
 /* Disabled state */
 .ueca-select-disabled .ueca-select-label {
-    color: rgba(0, 0, 0, 0.38);
+    color: var(--ink-disabled);
 }
 
 /* Helper text */
 .ueca-select-helper-text {
     font-size: 0.75rem;
-    color: rgba(0, 0, 0, 0.6);
+    color: var(--ink-dim);
     margin-top: 4px;
 }
 
 .ueca-select-helper-text-error {
-    color: #d32f2f;
+    color: var(--error);
 }
 
 /* Size variants */

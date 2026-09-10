@@ -69,8 +69,18 @@ function useAppRouter(params?: AppRouterParams): AppRouterModel {
             route = { path: "/" }
         }
 
-        const allowRoute = await model.bus.unicast("App.Router.BeforeRouteChange", route);
-        if (UECA.isUndefined(allowRoute) || allowRoute) {
+        // BROADCAST, not unicast. The guard has more than one legitimate subscriber - the active
+        // CRUDScreen vetoes on unsaved changes, AppTooltipManager just closes the tooltip - and
+        // unicast expects exactly one, throwing before it dispatches anything when more answer.
+        // (Older ueca-react versions did not check: unicast ran EVERY handler and returned only
+        // the first one's result, so whichever subscriber mounted first silently decided it.)
+        //
+        // Only an explicit `false` vetoes. A subscriber that returns nothing reacted to the
+        // navigation rather than judging it, which is the common case and must not block -
+        // testing for truthiness instead would make a plain `return;` in any future handler
+        // freeze routing app-wide, with no error to trace it by.
+        const answers = await model.bus.broadcast(null, "App.Router.BeforeRouteChange", route);
+        if (answers.every((allow) => allow !== false)) {
             if (historyTrack) {
                 await model.bus.unicast("App.BrowsingHistory.Open", { path: route });
             } else {
@@ -79,7 +89,9 @@ function useAppRouter(params?: AppRouterParams): AppRouterModel {
 
             newLayout.route = route;
             model._activeLayout = newLayout;
-            await model.bus.unicast("App.Router.AfterRouteChange", route);
+            // Also a broadcast: an announcement, not a question, and any number of screens may
+            // want to hear it.
+            await model.bus.broadcast(null, "App.Router.AfterRouteChange", route);
             return true;
         }
         return false;
@@ -112,16 +124,16 @@ function useAppRouter(params?: AppRouterParams): AppRouterModel {
         const activePath = await model.bus.unicast("App.BrowsingHistory.GetActivePath");
         const otherLayoutRoute = model.otherLayout.lookupRoute(activePath);
         if (otherLayoutRoute) {
-            _changeRoute(otherLayoutRoute, true);
+            await _changeRoute(otherLayoutRoute, true);
             return;
         }
 
         const appLayoutRoute = model.appLayout.lookupRoute(activePath);
         if (appLayoutRoute) {
-            _changeRoute(appLayoutRoute, false);
+            await _changeRoute(appLayoutRoute, false);
             return;
         } else {
-            _changeRoute(undefined, false);
+            await _changeRoute(undefined, false);
         }
     }
 }

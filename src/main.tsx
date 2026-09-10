@@ -1,5 +1,9 @@
 import * as UECA from "ueca-react";
 import { AbortExecutionException, Application, appMessageBus, runApplication } from "@core";
+// Order matters: scales, then per-theme colour, then the rules that consume both.
+import "./tokens.css";
+import "./themes.css";
+import "./theme.css";
 
 // Enable detailed UECA trace logging as needed
 UECA.globalSettings.traceLog = false;

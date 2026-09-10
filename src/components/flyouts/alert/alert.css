@@ -31,44 +31,44 @@
 
 /* Standard variant */
 .ueca-alert-standard.ueca-alert-success {
-    background-color: #e8f5e9;
-    color: #2e7d32;
+    background-color: var(--success-bg);
+    color: var(--success-ink);
 }
 
 .ueca-alert-standard.ueca-alert-info {
-    background-color: #e3f2fd;
-    color: #0277bd;
+    background-color: var(--info-bg);
+    color: var(--info-ink);
 }
 
 .ueca-alert-standard.ueca-alert-warning {
-    background-color: #fff3e0;
-    color: #ed6c02;
+    background-color: var(--warning-bg);
+    color: var(--warning-ink);
 }
 
 .ueca-alert-standard.ueca-alert-error {
-    background-color: #ffebee;
-    color: #c62828;
+    background-color: var(--error-bg);
+    color: var(--error-ink);
 }
 
 /* Filled variant */
 .ueca-alert-filled.ueca-alert-success {
-    background-color: #2e7d32;
-    color: white;
+    background-color: var(--success);
+    color: var(--ink-on-accent);
 }
 
 .ueca-alert-filled.ueca-alert-info {
-    background-color: #0277bd;
-    color: white;
+    background-color: var(--info);
+    color: var(--ink-on-accent);
 }
 
 .ueca-alert-filled.ueca-alert-warning {
-    background-color: #ed6c02;
-    color: white;
+    background-color: var(--warning);
+    color: var(--ink-on-accent);
 }
 
 .ueca-alert-filled.ueca-alert-error {
-    background-color: #c62828;
-    color: white;
+    background-color: var(--error);
+    color: var(--ink-on-accent);
 }
 
 /* Outlined variant */
@@ -78,21 +78,21 @@
 }
 
 .ueca-alert-outlined.ueca-alert-success {
-    border-color: #2e7d32;
-    color: #2e7d32;
+    border-color: var(--success);
+    color: var(--success);
 }
 
 .ueca-alert-outlined.ueca-alert-info {
-    border-color: #0277bd;
-    color: #0277bd;
+    border-color: var(--info);
+    color: var(--info);
 }
 
 .ueca-alert-outlined.ueca-alert-warning {
-    border-color: #ed6c02;
-    color: #ed6c02;
+    border-color: var(--warning);
+    color: var(--warning);
 }
 
 .ueca-alert-outlined.ueca-alert-error {
-    border-color: #c62828;
-    color: #c62828;
+    border-color: var(--error);
+    color: var(--error);
 }

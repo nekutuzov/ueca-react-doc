@@ -1,6 +1,10 @@
 import * as UECA from "ueca-react";
-import { ScreenBaseModel, ScreenBaseParams, ScreenBaseStruct, useScreenBase, Block, useMarkdownPreview, MarkdownPreviewModel } from "@components";
+import {
+    ScreenBaseModel, ScreenBaseParams, ScreenBaseStruct, useScreenBase, Col, Row, useMarkdownPreview,
+    MarkdownPreviewModel, DocsTocModel, useDocsToc, DocsPagerModel, useDocsPager
+} from "@components";
 import { Breadcrumb, CRUDScreenModel, useCRUDScreen } from "@core";
+import "./docsScreen.css";
 // The guide moved from docs/ to docs/raw/original/ in ueca-react 3.0. Order and titles below
 // follow docs/raw/index.md, "UECA-React Programming Guide".
 import introductionDoc from "../../../node_modules/ueca-react/docs/raw/original/Introduction to UECA-React.md?raw";
@@ -71,6 +75,33 @@ type DocRoutePath =
     | "/docs/utility-functions"
     | "/docs/code-template";
 
+// Reading order of the guide, matching docs/raw/index.md. The pager is the only thing that
+// needs the sequence; titles and paths still come from the switches below, so adding an
+// article means adding its id here and to those - not a second copy of the whole table.
+const DOC_ORDER: DocArticle[] = [
+    "introduction",
+    "technology",
+    "component-mental-model",
+    "component-integration-model",
+    "introduction-to-components",
+    "component-ids",
+    "lifecycle-hooks",
+    "state-management",
+    "property-bindings",
+    "onchange-events",
+    "onchanging-events",
+    "onprop-events",
+    "message-bus",
+    "arrays-and-reactivity",
+    "model-caching",
+    "component-extension",
+    "specialized-factories",
+    "tracing",
+    "error-handling",
+    "utility-functions",
+    "code-template"
+];
+
 type DocsScreenStruct = ScreenBaseStruct<{
     props: {
         article: DocArticle;
@@ -79,6 +110,8 @@ type DocsScreenStruct = ScreenBaseStruct<{
     children: {
         crudScreen: CRUDScreenModel;
         markdownPreview: MarkdownPreviewModel;
+        toc: DocsTocModel;
+        pager: DocsPagerModel;
     };
 }>;
 
@@ -95,16 +128,32 @@ function useDocsScreen(params?: DocsScreenParams): DocsScreenModel {
         children: {
             crudScreen: useCRUDScreen({
                 intent: "none",
+                contentPaddings: "none",
                 breadcrumbs: () => _breadCrumbs(),
                 contentView: () => (
-                    <Block fill padding="large" sx={{ maxWidth: "1200px", margin: "0 auto" }}>
-                        <model.markdownPreview.View />
-                    </Block>
+                    <Row className="docs-layout" spacing={"none"}>
+                        <Col className="docs-column" fill spacing={"none"}>
+                            <model.markdownPreview.View />
+                            <model.pager.View />
+                        </Col>
+                        <model.toc.View />
+                    </Row>
                 )
             }),
 
             markdownPreview: useMarkdownPreview({
                 source: () => _articleSource()
+            }),
+
+            toc: useDocsToc({
+                source: () => _articleSource()
+            }),
+
+            pager: useDocsPager({
+                prevLabel: () => _sibling(-1)?.title,
+                prevPath: () => _sibling(-1)?.path,
+                nextLabel: () => _sibling(1)?.title,
+                nextPath: () => _sibling(1)?.path
             })
         },
 
@@ -121,8 +170,19 @@ function useDocsScreen(params?: DocsScreenParams): DocsScreenModel {
         ];
     }
 
-    function _articleRoutePath(): DocRoutePath {
-        switch (model.article) {
+    // The neighbouring article in reading order, or undefined at either end of the guide.
+    function _sibling(offset: number): { title: string; path: DocRoutePath } {
+        const index = DOC_ORDER.indexOf(model.article);
+        const neighbour = index < 0 ? undefined : DOC_ORDER[index + offset];
+        return neighbour
+            ? { title: _articleTitle(neighbour), path: _articleRoutePath(neighbour) }
+            : undefined;
+    }
+
+    // Both take the article as an argument so the pager can ask about a neighbour; they
+    // default to the one on screen, which is every other call site.
+    function _articleRoutePath(article: DocArticle = model.article): DocRoutePath {
+        switch (article) {
             case "introduction":
                 return "/docs/introduction";
             case "technology":
@@ -168,8 +228,8 @@ function useDocsScreen(params?: DocsScreenParams): DocsScreenModel {
         }
     }
 
-    function _articleTitle(): string {
-        switch (model.article) {
+    function _articleTitle(article: DocArticle = model.article): string {
+        switch (article) {
             case "introduction":
                 return "Introduction";
             case "technology":

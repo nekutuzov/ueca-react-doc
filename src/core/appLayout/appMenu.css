@@ -1,0 +1,22 @@
+/* The guide ladder: numbered chapters under the section heading. */
+
+.app-menu-number {
+    display: inline-block;
+    min-width: 2ch;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: var(--tracking-wide);
+    /* Dim until the chapter is the one you are reading - see the .active rule below. */
+    color: var(--ink-disabled);
+    transition: color var(--motion-base) var(--ease);
+}
+
+.ueca-nav-item:hover .app-menu-number {
+    color: var(--ink-dim);
+}
+
+.ueca-nav-item.active .app-menu-number {
+    color: var(--marker);
+}

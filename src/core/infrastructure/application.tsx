@@ -3,8 +3,10 @@ import { UIBaseModel, UIBaseParams, UIBaseStruct, useUIBase } from "@components"
 import {
     AppBrowsingHistoryModel,
     useAppBrowsingHistory,
+    AppThemeManagerModel,
+    useAppThemeManager,
     AppUIModel,
-    useAppUI,    
+    useAppUI,
 } from "@core";
 
 type ApplicationStruct = UIBaseStruct<{
@@ -14,7 +16,8 @@ type ApplicationStruct = UIBaseStruct<{
     },
 
     children: {
-        browsingHistory: AppBrowsingHistoryModel;                
+        themeManager: AppThemeManagerModel;
+        browsingHistory: AppBrowsingHistoryModel;
         ui: AppUIModel;
     }
 }>;
@@ -31,6 +34,9 @@ function useApplication(params?: ApplicationParams): ApplicationModel {
         },
 
         children: {
+            // First: it resolves the active theme in constr, and the shell reads the mode as it
+            // builds.
+            themeManager: useAppThemeManager(),
             browsingHistory: useAppBrowsingHistory(),
             ui: useAppUI()
         },

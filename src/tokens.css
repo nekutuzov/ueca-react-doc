@@ -1,0 +1,189 @@
+/* ============================================================
+   Design tokens — everything that is NOT colour.
+
+   Colour lives in themes.css and varies per theme. The scales here are
+   theme-independent: a type step, a radius, a duration belong to the design
+   system, not the palette. Component CSS references a token rather than a
+   literal.
+
+   This is a documentation site, so the type scale is built for reading at
+   length — 16px body on a ~72ch measure — not for dense admin UI.
+   ============================================================ */
+
+:root {
+    /* ---- Typefaces ----
+       Display carries the personality (headings, hero), body carries the prose,
+       mono carries code and the structural micro-labels. Loaded in index.html
+       from Google Fonts; every stack falls back to something real. */
+    --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+    --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+    /* ---- Type scale ---- reading-first: --text-base is body copy. */
+    --text-2xs: 11px;
+    --text-xs: 12px;
+    --text-sm: 13px;
+    --text-md: 15px;
+    --text-base: 16px;
+    --text-lg: 19px;
+    --text-xl: 23px;
+    --text-2xl: 27px;
+    --text-3xl: 34px;
+    --text-4xl: 42px;
+
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+
+    --leading-tight: 1.15;
+    --leading-snug: 1.3;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.7;
+
+    --tracking-tight: -0.02em;
+    --tracking-normal: 0;
+    --tracking-wide: 0.04em;
+    --tracking-widest: 0.16em;
+
+    /* The reading measure. Prose is capped here; code blocks and tables are
+       allowed to be wider and scroll inside themselves. */
+    --measure: 72ch;
+
+    /* ---- Spacing ---- mirrors spacingMap in components/layout/layout.tsx. */
+    --space-none: 0px;
+    --space-tiny: 4px;
+    --space-default: 8px;
+    --space-small: 16px;
+    --space-medium: 24px;
+    --space-large: 32px;
+    --space-huge: 64px;
+
+    /* ---- Shell metrics ---- */
+    --sidebar-w: 300px;
+    --sidebar-w-collapsed: 60px;
+    --topbar-h: 52px;
+    --toc-w: 220px;
+
+    /* ---- Icon sizes ---- */
+    --icon-sm: 14px;
+    --icon-md: 16px;
+    --icon-lg: 20px;
+    --icon-xl: 24px;
+
+    /* ---- Radii ---- */
+    --radius-xs: 3px;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 10px;
+    --radius-pill: 999px;
+
+    /* ---- Strokes ----
+       The hairline is the app's default edge; the emphasis stroke is the step up
+       used by focus rings and the active-chapter spine marker. */
+    --hairline: 1px;
+    --stroke-emphasis: 2px;
+
+    /* ---- Elevation ---- */
+    --shadow-color: 0 0 0;
+    --shadow-1: 0 1px 2px rgb(var(--shadow-color) / 0.18);
+    --shadow-2: 0 4px 12px rgb(var(--shadow-color) / 0.22);
+    --shadow-3: 0 12px 32px rgb(var(--shadow-color) / 0.28);
+    --ring: 0 0 0 1px var(--border);
+
+    /* ---- Motion ---- tokenised so the reduced-motion override below reaches
+       every animation from one place. */
+    --motion-fast: 120ms;
+    --motion-base: 160ms;
+    --motion-slow: 240ms;
+    --ease: cubic-bezier(0.2, 0, 0, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+    /* ---- Overlay ladder ---- */
+    --z-hud: 5;
+    --z-sticky: 100;
+    --z-dropdown: 1000;
+    --z-dialog-backdrop: 1300;
+    --z-drawer: 1400;
+    --z-drawer-panel: 1410;
+    --z-toast: 2500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --motion-fast: 0ms;
+        --motion-base: 0ms;
+        --motion-slow: 0ms;
+    }
+}
+
+/* ============================================================
+   Typography roles — named steps so a component asks for "this is an eyebrow"
+   rather than picking a font-size. Type only; colour is decided at the call
+   site so these never override a palette choice.
+   ============================================================ */
+
+/* The structural micro-label: uppercase, tracked, mono. Sidebar section
+   headings, "On this page", the hero's section roles. */
+.ueca-eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    line-height: var(--leading-snug);
+}
+
+.ueca-display {
+    font-family: var(--font-display);
+    font-size: var(--text-4xl);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-tight);
+}
+
+.ueca-title-lg {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-tight);
+}
+
+.ueca-title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+}
+
+.ueca-body {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: var(--weight-regular);
+    line-height: var(--leading-relaxed);
+}
+
+.ueca-caption {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-regular);
+    line-height: var(--leading-normal);
+}
+
+/* Code fragments and the chapter numbers on the sidebar ladder. */
+.ueca-value {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--leading-snug);
+}
+
+/* min-width:0 is the part that is easy to miss: inside a flex Row/Col a text
+   child refuses to shrink below its content and overflows instead. */
+.ueca-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}

@@ -10,7 +10,11 @@ class DetailedError extends Error {
         this.name = name;
         this.message = message;
         this.details = details;
-        this.stack = stack;
+        // Only override the captured JS stack when a real one is supplied. Assigning
+        // unconditionally wipes it whenever the caller has none.
+        if (stack) {
+            this.stack = stack;
+        }
     }
 }
 

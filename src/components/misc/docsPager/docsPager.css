@@ -1,0 +1,61 @@
+/* Prev / next at the foot of an article. */
+
+.docs-pager {
+    margin-top: var(--space-huge);
+    padding-top: var(--space-medium);
+    border-top: var(--hairline) solid var(--border);
+    gap: var(--space-small);
+}
+
+.docs-pager-link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-tiny);
+    flex: 0 1 auto;
+    max-width: 48%;
+    appearance: none;
+    text-align: left;
+    cursor: pointer;
+    background: var(--surface);
+    border: var(--hairline) solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-default) var(--space-small);
+    transition: border-color var(--motion-base) var(--ease),
+                background-color var(--motion-base) var(--ease);
+}
+
+.docs-pager-link:hover {
+    border-color: var(--accent);
+    background: var(--hover);
+}
+
+/* The "next" card aligns to its own right edge so the pair reads outward from the middle. */
+.docs-pager-next {
+    text-align: right;
+    align-items: flex-end;
+}
+
+.docs-pager-dir {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--ink-disabled);
+}
+
+.docs-pager-link:hover .docs-pager-dir {
+    color: var(--accent);
+}
+
+.docs-pager-title {
+    font-family: var(--font-display);
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    color: var(--ink);
+    line-height: var(--leading-snug);
+}
+
+@media (max-width: 640px) {
+    .docs-pager-link {
+        max-width: 100%;
+    }
+}

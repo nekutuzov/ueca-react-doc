@@ -1,6 +1,8 @@
 import * as UECA from "ueca-react";
 import { AlertDrawerModel, BlockProps, Col, Row, UIBaseModel, UIBaseParams, UIBaseStruct, useAlertDrawer, useUIBase } from "@components";
 import { Breadcrumb, LocationBreadcrumbsModel, useLocationBreadcrumbs, UECAContactsModel, useUECAContacts } from "@core";
+import { ThemeToggleModel, useThemeToggle } from "../appComponents/themeToggle/themeToggle";
+import "./screenLayout.css";
 
 type ScreenLayoutStruct = UIBaseStruct<{
     props: {
@@ -14,6 +16,7 @@ type ScreenLayoutStruct = UIBaseStruct<{
     children: {
         breadcrumbsControl: LocationBreadcrumbsModel;
         drawerPanel: AlertDrawerModel;
+        themeToggle: ThemeToggleModel;
         contacts: UECAContactsModel;
     };
 }>;
@@ -43,6 +46,8 @@ function useScreenLayout(params?: ScreenParams): ScreenLayoutModel {
                 width: 1000,
             }),
 
+            themeToggle: useThemeToggle(),
+
             contacts: useUECAContacts({
                 orientation: "horizontal"
             })
@@ -60,16 +65,26 @@ function useScreenLayout(params?: ScreenParams): ScreenLayoutModel {
                         model.contentPaddings;
 
             return (
-                <Col id={model.htmlId()} fill divider overflow={"hidden"}>
-                    <Row verticalAlign={"center"} horizontalAlign={"spaceBetween"} padding={{ leftRight: "medium" }} height={"40px"}>
+                <Col id={model.htmlId()} fill overflow={"hidden"}>
+                    <Row
+                        className="app-topbar"
+                        verticalAlign={"center"}
+                        horizontalAlign={"spaceBetween"}
+                        padding={{ leftRight: "medium" }}
+                        height={"var(--topbar-h)"}
+                    >
                         <model.breadcrumbsControl.View />
-                        <Row spacing={"small"}>
+                        <Row spacing={"tiny"} verticalAlign={"center"}>
                             {model.toolsView}
+                            <div className="app-topbar-divider" />
+                            <model.themeToggle.View />
                             <model.contacts.View />
                             {/* <HiddenToolsButton items={model.hiddenToolsView} /> */}
                         </Row>
                     </Row>
-                    <Col fill padding={contentPaddings} overflow={"auto"}>
+                    {/* overflow stays a prop: Col writes `overflow: visible` inline when it is
+                        omitted, which would outrank the stylesheet. */}
+                    <Col className="app-content" fill padding={contentPaddings} overflow={"auto"}>
                         {model.contentView}
                     </Col>
                     <model.drawerPanel.View />

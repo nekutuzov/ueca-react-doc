@@ -1,0 +1,271 @@
+/* Landing page. One loud element - the struct spine - and quiet everywhere else. */
+
+.home {
+    max-width: 940px;
+    padding: var(--space-huge) var(--space-medium) var(--space-huge);
+    margin: 0 auto;
+}
+
+/* ---- Hero ---- */
+
+.home-eyebrow {
+    color: var(--marker);
+    margin-bottom: var(--space-small);
+}
+
+.home-headline {
+    font-family: var(--font-display);
+    /* Scales with the column instead of stepping at a breakpoint. */
+    font-size: clamp(34px, 5.4vw, 56px);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    color: var(--ink);
+    margin: 0 0 var(--space-medium);
+}
+
+.home-lead {
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: var(--ink-dim);
+    max-width: 60ch;
+    margin: 0 0 var(--space-medium);
+}
+
+.home-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-default);
+}
+
+/* ---- Buttons ---- */
+
+.home-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    appearance: none;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    color: var(--ink);
+    background: var(--surface);
+    border: var(--hairline) solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 9px 16px;
+    transition: border-color var(--motion-base) var(--ease),
+                background-color var(--motion-base) var(--ease),
+                color var(--motion-base) var(--ease);
+}
+
+.home-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.home-btn-primary {
+    color: var(--ink-on-accent);
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.home-btn-primary:hover {
+    color: var(--ink-on-accent);
+    background: var(--accent-strong);
+    border-color: var(--accent-strong);
+}
+
+.home-btn-sm {
+    font-size: var(--text-sm);
+    padding: 5px 11px;
+}
+
+/* ---- The signature: the fixed section order ---- */
+
+.home-spine-block {
+    margin: var(--space-huge) 0;
+    padding: var(--space-medium);
+    background: var(--surface);
+    border: var(--hairline) solid var(--border);
+    border-radius: var(--radius-lg);
+}
+
+.home-spine-caption {
+    color: var(--ink-disabled);
+    margin-bottom: var(--space-small);
+}
+
+.home-spine {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 var(--space-medium);
+}
+
+/* The spine itself. Inset top and bottom so it starts and ends at the first and last marker
+   rather than floating past them. */
+.home-spine::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 0.85em;
+    bottom: 0.85em;
+    width: var(--hairline);
+    background: var(--border);
+}
+
+.home-spine-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 8.5rem 1fr;
+    gap: var(--space-small);
+    align-items: baseline;
+    padding: 7px 0;
+}
+
+/* The marker. Amber, like the active chapter in the sidebar: both report structure. */
+.home-spine-row::before {
+    content: "";
+    position: absolute;
+    left: calc(var(--space-medium) * -1);
+    top: 0.7em;
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-circle, 50%);
+    background: var(--marker);
+}
+
+.home-spine-name {
+    font-family: var(--font-mono);
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    color: var(--ink);
+}
+
+.home-spine-role {
+    font-size: var(--text-md);
+    color: var(--ink-dim);
+}
+
+.home-spine-note {
+    margin: var(--space-small) 0 0;
+    padding-left: var(--space-medium);
+    font-size: var(--text-sm);
+    color: var(--ink-dim);
+}
+
+/* ---- Sections ---- */
+
+.home-section {
+    margin-top: var(--space-huge);
+}
+
+.home-h2 {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight);
+    color: var(--ink);
+    margin: 0 0 var(--space-small);
+    padding-bottom: var(--space-default);
+    border-bottom: var(--hairline) solid var(--border);
+}
+
+.home-prose p {
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    color: var(--ink-dim);
+    max-width: var(--measure);
+    margin: 0 0 var(--space-small);
+}
+
+/* ---- Principle cards ---- */
+
+.home-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-small);
+}
+
+.home-card {
+    background: var(--surface);
+    border: var(--hairline) solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-small);
+}
+
+.home-card-title {
+    font-family: var(--font-display);
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    color: var(--ink);
+    margin: 0 0 var(--space-tiny);
+}
+
+.home-card-body {
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    color: var(--ink-dim);
+    margin: 0;
+}
+
+/* ---- Demos ---- */
+
+.home-demos {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: var(--hairline) solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.home-demo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-small);
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-small);
+    background: var(--surface);
+}
+
+.home-demo + .home-demo {
+    border-top: var(--hairline) solid var(--border);
+}
+
+.home-demo-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.home-demo-name {
+    font-family: var(--font-display);
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    color: var(--ink);
+}
+
+.home-demo-note {
+    font-size: var(--text-sm);
+    color: var(--ink-dim);
+}
+
+.home-demo-links {
+    display: flex;
+    gap: var(--space-default);
+}
+
+@media (max-width: 640px) {
+    .home {
+        padding: var(--space-large) var(--space-small);
+    }
+
+    .home-spine-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+}

@@ -83,7 +83,11 @@ function useNavLink(params?: NavLinkParams): NavLinkModel {
                     id={model.htmlId()}
                     className={`ueca-nav-link ${underlineClass}`}
                     href={(model.route?.path.startsWith("/") ? "#" : "") + model.route?.path}
-                    title={model.title}
+                    // aria-label rather than title: `title` here duplicated the visible label on
+                    // every menu item, so hovering the sidebar popped a native bubble repeating
+                    // the word already on screen. NavItem supplies the real tooltip when the
+                    // label is actually hidden (the collapsed icon rail).
+                    aria-label={model.title}
                     target={model.newTab ? "_blank" : undefined}
                     rel={model.newTab ? "noopener noreferrer" : undefined}
                     style={{ color: colorStyle }}

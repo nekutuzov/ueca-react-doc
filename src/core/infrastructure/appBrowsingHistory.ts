@@ -8,6 +8,9 @@ type AppBrowsingHistoryStruct = BaseStruct<{
         __baseURL: string;
         __appTitle: string;
         __currentHistoryIndex: number;
+        // Held so the popstate listener can be detached: syncWithBrowser is callable more than
+        // once and there is no destroy hook.
+        __popstateHandler: (event: PopStateEvent) => void;
     },
 
     methods: {
@@ -54,7 +57,12 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
                     console.info("<base> element is missing in index.html. Using empty string as base URL.");  
                     model.__baseURL = "";
                 }  
-                window.addEventListener("popstate", () => asyncSafe(async () => await _browserNavigation()));
+                // Detach any listener a previous call left behind before adding this one. Without
+                // it a second syncWithBrowser() leaves two interceptors racing over one popstate,
+                // each rolling back against its own idea of the current index.
+                _detachPopstate();
+                model.__popstateHandler = () => asyncSafe(async () => await _browserNavigation());
+                window.addEventListener("popstate", model.__popstateHandler);
                 _syncCurrentPath();
             },
 
@@ -63,7 +71,11 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
                     route = _routeToURL(route);
                 }
                 if (newTab) {
-                    window.open(route, "_blank");
+                    // noopener closes the reverse-tabnabbing hole: without it the opened page
+                    // gets a live window.opener and can navigate this one. Unlike <a
+                    // target="_blank">, window.open does not imply it. Passing only these two
+                    // features still yields a tab rather than a popup.
+                    window.open(route, "_blank", "noopener,noreferrer");
                     return;
                 }
                 await _navigate(route);
@@ -73,7 +85,13 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
                 if (UECA.isObject(route)) {
                     route = _routeToURL(route);
                 }
-                history.replaceState({ index: history.state.index }, "", route);
+                if (_divertCrossOrigin(route)) {
+                    return;
+                }
+                // A hash-only or externally pushed entry carries no index, so read it defensively
+                // and fall back to the one we are already on.
+                const index = history.state?.index ?? model.__currentHistoryIndex;
+                history.replaceState({ index }, "", route);
                 // history.state isn't ready yet due to async logic
                 runAsync(() => { model.__currentHistoryIndex = history.state.index });
                 _syncCurrentPath();
@@ -93,6 +111,13 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
             const appInfo = await model.bus.unicast("App.GetInfo");
             model.__appTitle = appInfo?.appName;
             _syncDocumentTitle();
+        },
+
+        // Paired with the listener syncWithBrowser installs in constr. deinit is a DEACTIVATION
+        // hook rather than destruction - it can fire and be followed by another init - but a
+        // listener is cheap to re-add, so pairing is right here.
+        deinit: () => {
+            _detachPopstate();
         }
     }
 
@@ -122,7 +147,36 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
         window.document.title = path ? `${model.__appTitle}: ${path}` : model.__appTitle;
     }
 
+    // The counterpart to the listener syncWithBrowser installs. Called from deinit, and again
+    // before each re-attach so a repeated syncWithBrowser cannot leave two interceptors behind.
+    function _detachPopstate() {
+        if (!model.__popstateHandler) {
+            return;
+        }
+        window.removeEventListener("popstate", model.__popstateHandler);
+        model.__popstateHandler = undefined;
+    }
+
+    // Cross-site history is prohibited: neither pushState nor replaceState can move the document
+    // to another origin - they throw a SecurityError - so a foreign URL always becomes a new tab.
+    // Both entry points go through here, because a string route may be any URL. Returns true when
+    // it took the navigation.
+    function _divertCrossOrigin(url: string): boolean {
+        // "" is what an empty route resolves to, and means "the current URL" to both history calls.
+        if (!url || new URL(url).origin === window.location.origin) {
+            return false;
+        }
+        window.open(url, "_blank", "noopener,noreferrer");
+        return true;
+    }
+
     async function _browserNavigation() {
+        // Only entries this app pushed carry an index. A hash-only navigation, or one pushed from
+        // outside the app, lands here unstamped - adopt the index we are already on, the same
+        // repair syncWithBrowser() makes at load, rather than reading `index` off null.
+        if (!history.state) {
+            history.replaceState({ index: model.__currentHistoryIndex }, "", window.location.href);
+        }
         const state_index = history.state.index;
         if (model.__currentHistoryIndex === state_index) {
             let path = window.location.pathname.substring(model.__baseURL.length);
@@ -200,19 +254,18 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
             return
         }
 
-        const url = new URL(newURL);
-        if (url.origin !== window.location.origin) {
-            window.open(newURL, "_blank"); // Cross-site history is prohibited. Always open a new tab.
-        } else {
-            model.__currentHistoryIndex = history.length;
-            history.pushState({ index: model.__currentHistoryIndex }, "", newURL);
-            if (history.length - model.__currentHistoryIndex === 1) {
-                // History was truncated or abnormally changes by the browser. Synchronize the state.
-                model.__currentHistoryIndex = history.length - 1;
-                history.replaceState({ index: model.__currentHistoryIndex }, "", newURL);
-            }
-            _syncCurrentPath();
+        if (_divertCrossOrigin(newURL)) {
+            return;
         }
+
+        model.__currentHistoryIndex = history.length;
+        history.pushState({ index: model.__currentHistoryIndex }, "", newURL);
+        if (history.length - model.__currentHistoryIndex === 1) {
+            // History was truncated or abnormally changes by the browser. Synchronize the state.
+            model.__currentHistoryIndex = history.length - 1;
+            history.replaceState({ index: model.__currentHistoryIndex }, "", newURL);
+        }
+        _syncCurrentPath();
     }
 }
 

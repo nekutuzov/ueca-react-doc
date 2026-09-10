@@ -2,7 +2,7 @@ import * as UECA from "ueca-react";
 import { ErrorFallback, Col, UIBaseModel, UIBaseParams, UIBaseStruct, useUIBase } from "@components";
 import {
     AbortExecutionException, AppBusyDisplayModel, useAppBusyDisplay, AppDialogManagerModel, useAppDialogManager,
-    AppAlertManagerModel, useAppAlertManager, AppRouter
+    AppAlertManagerModel, useAppAlertManager, AppTooltipManagerModel, useAppTooltipManager, AppRouter
 } from "@core";
 
 type AppUIStruct = UIBaseStruct<{
@@ -10,6 +10,7 @@ type AppUIStruct = UIBaseStruct<{
         busyDisplay: AppBusyDisplayModel;
         dialogManager: AppDialogManagerModel;
         alertManager: AppAlertManagerModel;
+        tooltipManager: AppTooltipManagerModel;
     };
 
     methods: {
@@ -29,7 +30,8 @@ function useAppUI(params?: AppUIParams): AppUIModel {
         children: {
             dialogManager: useAppDialogManager(),
             alertManager: useAppAlertManager(),
-            busyDisplay: useAppBusyDisplay()            
+            busyDisplay: useAppBusyDisplay(),
+            tooltipManager: useAppTooltipManager()
         },
 
         messages: {
@@ -51,6 +53,8 @@ function useAppUI(params?: AppUIParams): AppUIModel {
                     <model.busyDisplay.View />
                     <model.dialogManager.View />
                     <model.alertManager.View />
+                    {/* Last, so it paints over the other overlays it may be triggered from. */}
+                    <model.tooltipManager.View />
                 </Col>
                 <UECA.TraceViewerButton />
             </ErrorFallback>

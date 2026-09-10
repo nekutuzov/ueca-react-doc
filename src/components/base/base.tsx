@@ -1,9 +1,15 @@
 import * as UECA from "ueca-react";
-import { AppMessage, AppRoute } from "@core";
+import { AnchorRect, AppMessage, AppRoute, Placement, asyncSafe } from "@core";
 
 // Base UECA Component for all components in the application
 
 type BasePartialStruct = UECA.ComponentStruct<{
+    props: {
+        // Whether this component currently owns the app's tooltip. Private and non-reactive: it
+        // exists only so deinit knows whether it has a bubble to take down.
+        __tooltipShown: boolean;
+    };
+
     methods: {
         // Shorthand Methods
 
@@ -35,8 +41,20 @@ type BasePartialStruct = UECA.ComponentStruct<{
         runWithBusyDisplay: <T>(action: () => Promise<T>) => Promise<T>;
         copyToClipboard: (content: string) => Promise<void>;
 
-        // File selection        
+        // File selection
         selectFiles: (fileMask: string, multiselect?: boolean) => Promise<File[]>;
+
+        // Tooltip. Spread the result onto any element to give it the app's tooltip:
+        //     <button {...model.tooltipProps("Switch to dark theme")}>…</button>
+        // showTooltip / hideTooltip are the direct route, for a trigger that is not a hover.
+        tooltipProps: (contentView: React.ReactNode, options?: { placement?: Placement; delay?: number }) => {
+            onMouseEnter: (e: React.MouseEvent) => void;
+            onMouseLeave: () => void;
+            onFocus: (e: React.FocusEvent) => void;
+            onBlur: () => void;
+        };
+        showTooltip: (anchor: AnchorRect, contentView: React.ReactNode, options?: { placement?: Placement; delay?: number }) => Promise<void>;
+        hideTooltip: () => Promise<void>;
     }
 
 }, AppMessage>;
@@ -48,6 +66,19 @@ type BaseModel<T extends BasePartialStruct = BasePartialStruct> = UECA.Component
 
 function useBase<T extends BasePartialStruct>(extStruct: T, params?: BaseParams<T>): BaseModel<T> {
     const struct: BasePartialStruct = {
+        props: {
+            __tooltipShown: false
+        },
+
+        // A trigger can disappear while its tooltip is open — the sidebar collapses, a screen
+        // switches — and mouseleave never fires, which would strand the bubble on screen.
+        // hideTooltip carries this component's token, so it can only close its own.
+        deinit: async () => {
+            if (model.__tooltipShown) {
+                await model.hideTooltip();
+            }
+        },
+
         methods: {
             // Shorthand Methods
 
@@ -79,6 +110,20 @@ function useBase<T extends BasePartialStruct>(extStruct: T, params?: BaseParams<
             // Misc
             runWithErrorDisplay: async (p) => await _runWithErrorDisplay(p),
             runWithBusyDisplay: async (action) => await _runWithBusyDisplay(action),
+
+            // Tooltip
+            tooltipProps: (contentView, options) => _tooltipProps(contentView, options),
+            // The flag is set here rather than in _tooltipProps so that every route to the
+            // tooltip marks it, including a direct showTooltip from a click handler.
+            showTooltip: async (anchor, contentView, options) => {
+                model.__tooltipShown = true;
+                await model.bus.unicast("App.Tooltip.Show",
+                    { token: model.htmlId(), anchor, contentView, placement: options?.placement, delay: options?.delay });
+            },
+            hideTooltip: async () => {
+                model.__tooltipShown = false;
+                await model.bus.unicast("App.Tooltip.Hide", { token: model.htmlId() });
+            },
         }
     }
 
@@ -86,6 +131,36 @@ function useBase<T extends BasePartialStruct>(extStruct: T, params?: BaseParams<
     return model;
 
     // Private methods
+    function _tooltipProps(contentView: React.ReactNode, options?: { placement?: Placement; delay?: number }) {
+        // The anchor rect is read from the event target, so the caller needs no ref — and it is
+        // read at hover time, when it is actually correct, rather than at render time.
+        const open = (target: Element) => {
+            const r = target.getBoundingClientRect();
+            const anchor: AnchorRect = { top: r.top, left: r.left, width: r.width, height: r.height };
+            asyncSafe(() => model.showTooltip(anchor, contentView, options));
+        };
+        const close = () => asyncSafe(() => model.hideTooltip());
+
+        // Focus and blur as well as the pointer pair: a tooltip that only answers the mouse is
+        // invisible to keyboard users. These are raw DOM handlers and cannot be async, hence
+        // asyncSafe.
+        return {
+            onMouseEnter: (e: React.MouseEvent) => open(e.currentTarget),
+            onMouseLeave: () => close(),
+            // Only KEYBOARD focus opens a tooltip. Clicking a control focuses it too, and the
+            // browser restores that focus when the user returns from another tab — which would
+            // pop a tooltip with the pointer nowhere near the trigger. :focus-visible is exactly
+            // the keyboard-vs-pointer distinction.
+            onFocus: (e: React.FocusEvent) => {
+                if (!e.currentTarget.matches(":focus-visible")) {
+                    return;
+                }
+                open(e.currentTarget);
+            },
+            onBlur: () => close()
+        };
+    }
+
     async function _runWithErrorDisplay<P, R>(action: (params?: P) => Promise<R>, params?: P): Promise<R> {
         try {
             return await action(params);

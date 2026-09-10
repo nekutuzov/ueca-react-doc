@@ -1,7 +1,7 @@
 import * as UECA from "ueca-react";
-import { ScreenBaseModel, ScreenBaseParams, ScreenBaseStruct, useScreenBase, Block, useMarkdownPreview, MarkdownPreviewModel } from "@components";
+import { ScreenBaseModel, ScreenBaseParams, ScreenBaseStruct, useScreenBase } from "@components";
 import { Breadcrumb, CRUDScreenModel, useCRUDScreen } from "@core";
-import welcome from "./welcome.md?raw";
+import { HomeHeroModel, useHomeHero } from "./homeHero/homeHero";
 
 type HomeScreenStruct = ScreenBaseStruct<{
     props: {
@@ -10,7 +10,7 @@ type HomeScreenStruct = ScreenBaseStruct<{
 
     children: {
         crudScreen: CRUDScreenModel;
-        markdownPreview: MarkdownPreviewModel;
+        hero: HomeHeroModel;
     };
 }>;
 
@@ -27,17 +27,13 @@ function useHomeScreen(params?: HomeScreenParams): HomeScreenModel {
         children: {
             crudScreen: useCRUDScreen({
                 intent: "none",
+                // The hero owns its own measure and rhythm, so the layout adds no padding.
+                contentPaddings: "none",
                 breadcrumbs: () => _breadCrumbs(),
-                contentView: () => (
-                    <Block fill padding="large" sx={{ maxWidth: "1200px", margin: "0 auto" }}>
-                        <model.markdownPreview.View />
-                    </Block>
-                )
+                contentView: () => <model.hero.View />
             }),
 
-            markdownPreview: useMarkdownPreview({
-                source: () => welcome
-            })
+            hero: useHomeHero()
         },
 
         View: () => <model.crudScreen.View />
@@ -57,4 +53,3 @@ function useHomeScreen(params?: HomeScreenParams): HomeScreenModel {
 const HomeScreen = UECA.getFC(useHomeScreen);
 
 export { HomeScreenModel, useHomeScreen, HomeScreen };
-
