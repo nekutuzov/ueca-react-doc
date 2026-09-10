@@ -199,6 +199,26 @@ Flex children also need `min-width: 0` / `min-height: 0` to shrink; without them
 widens the whole page instead of scrolling inside its own `pre` — and the sidebar menu grows past
 the rail instead of showing a scrollbar.
 
+## No sideways surprises
+
+A flex item's width floor is its **min-content** width, so one long unbreakable word — a nav label
+reading `onPropChange/onPropChanging`, an article title in a breadcrumb — pushes its whole container
+wider and something sprouts a horizontal scrollbar or gets clipped by the window edge. Three habits
+keep it from happening:
+
+- give any flex item that must be allowed to shrink `min-width: 0` (the breadcrumb wrapper, the
+  content column);
+- name the overflow axes rather than both — `overflow={"hidden auto"}` on the sidebar rail, because
+  an index of chapters has no horizontal axis;
+- `overflow-wrap: anywhere`, not `break-word`, when a label is the backstop: only `anywhere` lowers
+  the min-content width, which is the number that actually decides whether the item can shrink.
+
+Before calling a layout change done, sweep for it rather than waiting to be shown a screenshot —
+in the browser console, flag every element whose `scrollWidth` exceeds its `clientWidth` while its
+computed `overflow-x` is not `auto`/`scroll` and its `text-overflow` is not `ellipsis` (those two
+are overflowing on purpose). Run it on Home and a long article at 1440 / 640 / 375. It should come
+back empty.
+
 ## Tooltips
 
 **Never use the native `title` attribute.** There is one tooltip in the app, `AppTooltipManager`,

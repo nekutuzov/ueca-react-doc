@@ -142,7 +142,9 @@ function useAppMenu(params?: AppMenuParams): AppMenuModel {
                 route: { path: "/docs/onchanging-events" }
             }),
             onpropEventsMenuItem: useMenuItem({
-                text: "Automatic onPropChange/onPropChanging",
+                // Spaces around the slash: "onPropChange/onPropChanging" is one 27-character word
+                // to a line breaker, wider than the rail, and it used to hang off the edge.
+                text: "Automatic onPropChange / onPropChanging",
                 number: "12",
                 route: { path: "/docs/onprop-events" }
             }),

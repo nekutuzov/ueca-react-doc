@@ -127,8 +127,11 @@ function useAppSideBar(params?: AppSideBarParams): AppSideBarModel {
 
                     {/* Menu Section - fills remaining space, and scrolls when the 21 chapters
                         outrun it. overflow is a prop, not a class: Col writes `overflow: visible`
-                        inline when it is omitted, which outranks the stylesheet. */}
-                    <Col className="app-sidebar-scroll" fill overflow={"auto"}>
+                        inline when it is omitted, which outranks the stylesheet.
+                        Two values, x then y: an index of chapters has no horizontal axis, so
+                        sideways is hidden outright rather than left to grow a second scrollbar
+                        the first time a label does not fit. */}
+                    <Col className="app-sidebar-scroll" fill overflow={"hidden auto"}>
                         <model.menu.View />
                     </Col>
                 </Col>

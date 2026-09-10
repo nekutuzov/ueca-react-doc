@@ -2,6 +2,13 @@
 
 .app-menu-number {
     display: inline-block;
+    /* A chapter number is one token and a fixed column. Both lines are load-bearing: the item
+       allows breaking anywhere so a long label cannot overflow the rail, and without nowrap that
+       permission reaches in here and stacks "11" as 1 over 1 - the letter-spacing puts two digits
+       a hair over the 2ch floor, which is all the excuse a break needs. flex-shrink:0 keeps the
+       label from squeezing the column instead of wrapping itself. */
+    white-space: nowrap;
+    flex: 0 0 auto;
     min-width: 2ch;
     font-family: var(--font-mono);
     font-size: var(--text-xs);

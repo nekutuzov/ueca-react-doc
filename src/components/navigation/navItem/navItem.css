@@ -1,5 +1,10 @@
 .ueca-nav-item {
     position: relative;
+    /* A label is a label, not a horizontal scroll. `anywhere` rather than `break-word`: only
+       `anywhere` lowers the min-content width, and the label sits in a flex row whose floor is
+       exactly that - so with `break-word` a long identifier still forces the rail wider. This
+       is the backstop; a label should be written to break at a space of its own accord. */
+    overflow-wrap: anywhere;
     /* Set here rather than inherited: the parent <a> carries an inline accent colour, and a
        sidebar of 20-odd all-blue links has no hierarchy. A rule on the element itself beats
        the inherited inline value. */

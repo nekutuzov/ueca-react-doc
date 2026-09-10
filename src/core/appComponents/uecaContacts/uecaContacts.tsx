@@ -70,7 +70,7 @@ function useUECAContacts(params?: UECAContactsParams): UECAContactsModel {
             const Container = model.orientation === "horizontal" ? Row : Col;
             
             return (
-                <Container id={model.htmlId()} spacing="small">
+                <Container id={model.htmlId()} className="ueca-contacts" spacing="small">
                     <model.websiteIconButton.View />
                     <model.emailIconButton.View />
                     <model.githubIconButton.View />

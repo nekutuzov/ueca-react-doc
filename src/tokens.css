@@ -28,8 +28,11 @@
     --text-lg: 19px;
     --text-xl: 23px;
     --text-2xl: 27px;
-    --text-3xl: 34px;
-    --text-4xl: 42px;
+    /* The two display steps are fluid. At a fixed 42px a phone column fits about nine
+       characters, so an article title like "Automatic onPropChange and onPropChanging Events"
+       broke inside the identifiers - "onPropChang / e and". The floor keeps a long name whole. */
+    --text-3xl: clamp(26px, 5.2vw, 34px);
+    --text-4xl: clamp(30px, 6.4vw, 42px);
 
     --weight-regular: 400;
     --weight-medium: 500;

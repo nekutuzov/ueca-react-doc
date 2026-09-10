@@ -35,6 +35,11 @@
    collapses to that padding alone, where the page is left-aligned and the trail already lines up. */
 .app-topbar > :has(> .ueca-breadcrumbs) {
     margin-left: max(0px, (100% - var(--band-w)) / 2 + var(--page-pad));
+    /* Without this the trail cannot shrink - a flex item's floor is its min-content width, and
+       an article title like "Automatic onPropChange and onPropChanging Events" is wider than a
+       phone. It ran straight under the theme and contact buttons. The ellipsis rules below only
+       get their chance once this lets the box narrow. */
+    min-width: 0;
 }
 
 .app-topbar .ueca-breadcrumbs > * {
@@ -53,6 +58,19 @@
    rather than as something switched off. */
 .app-topbar .ueca-nav-link-disabled {
     color: var(--ink);
+}
+
+/* On a phone the bar cannot hold the trail and six buttons: the five links alone want 264px of
+   a 283px bar, so the last of them was being cut in half by the window edge. Reading is what a
+   phone is for here, so the trail keeps the space and the outbound links stand down until there
+   is room - they are chrome, not navigation, and GitHub is on the home page besides.
+   The buttons are hidden rather than their container: Row writes `display: flex` inline, which
+   no stylesheet can override, while the button itself takes its display from CSS. */
+@media (max-width: 640px) {
+    .app-topbar .ueca-contacts .ueca-icon-button,
+    .app-topbar .app-topbar-divider {
+        display: none;
+    }
 }
 
 /* A hairline between the screen's own tools and the app-level controls (theme, contacts),
