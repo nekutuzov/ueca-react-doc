@@ -21,8 +21,11 @@ type RouteComp = (params?: Record<string, unknown>) => UECA.ReactElement;
 
 type Routing = Record<string, RouteComp>;
 
+// `section` is an anchor within the page - the fragment of the URL. It belongs to the address
+// beside the path rather than inside it: lookupRoute matches the path with a regular expression,
+// so a "#id" glued onto the path would match no route at all.
 type Route<R extends Routing> = {
-    [K in keyof R]: { path: K, params?: Parameters<R[K]>[0] }
+    [K in keyof R]: { path: K, params?: Parameters<R[K]>[0], section?: string }
 }[keyof R];
 
 type AnyRoute = Route<Routing>;

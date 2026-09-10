@@ -61,9 +61,12 @@ type MiscMessages = {
     "App.Theme.Changed": { in: { theme: ThemeId, mode: ThemeMode } };
 
     "App.BrowsingHistory.GetActivePath": { out: string };
+    "App.BrowsingHistory.GetActiveSection": { out: string };
     "App.BrowsingHistory.Open": { in: { path: AnyRoute | string, newTab?: boolean } };
     "App.BrowsingHistory.Replace": { in: { path: AnyRoute | string } };
-    "App.BrowsingHistory.OnNavigate": { in: string, out: boolean }
+    // Carries the section as well as the path, so Back and Forward restore an anchor within the
+    // page the same way they restore the page.
+    "App.BrowsingHistory.OnNavigate": { in: { path: string, section: string }, out: boolean }
 
     "App.Router.GetRoute": { out: AppRoute };
     "App.Router.GoToRoute": { in: AppRoute; out: boolean };

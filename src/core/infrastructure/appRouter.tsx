@@ -39,7 +39,7 @@ function useAppRouter(params?: AppRouterParams): AppRouterModel {
 
             "App.Router.SetRouteParams": async (p) => await _setRouteParams(p.params, p.patch),
 
-            "App.BrowsingHistory.OnNavigate": async (path) => await _onNavigateBrowsingHistory(path)
+            "App.BrowsingHistory.OnNavigate": async (p) => await _onNavigateBrowsingHistory(p.path, p.section)
         },
 
         init: async () => {
@@ -112,29 +112,40 @@ function useAppRouter(params?: AppRouterParams): AppRouterModel {
         await model.bus.unicast("App.BrowsingHistory.Replace", { path: route });
     }
 
-    async function _onNavigateBrowsingHistory(path: string) {
+    // Back and Forward land here. The section travels with the path, so an entry that names an
+    // anchor is restored as that anchor - the browser moved the URL, and the route the app acts on
+    // says the same thing the URL does.
+    async function _onNavigateBrowsingHistory(path: string, section: string) {
         const route = model.appLayout.lookupRoute(path) || model.otherLayout.lookupRoute(path);
         if (!route) {
-            await _changeRoute(undefined, true);
+            return await _changeRoute(undefined, true);
         }
-        return await _changeRoute(route, true);
+        return await _changeRoute(_withSection(route, section), true);
     }
 
     async function _syncCurrentRoute() {
         const activePath = await model.bus.unicast("App.BrowsingHistory.GetActivePath");
+        const activeSection = await model.bus.unicast("App.BrowsingHistory.GetActiveSection");
         const otherLayoutRoute = model.otherLayout.lookupRoute(activePath);
         if (otherLayoutRoute) {
             await _changeRoute(otherLayoutRoute, true);
             return;
         }
 
+        // Carrying the section here is what makes a link into a section survive being opened cold:
+        // the startup Replace rebuilds the URL from this route, and a route that knows its anchor
+        // rebuilds it with the anchor still on.
         const appLayoutRoute = model.appLayout.lookupRoute(activePath);
         if (appLayoutRoute) {
-            await _changeRoute(appLayoutRoute, false);
+            await _changeRoute(_withSection(appLayoutRoute, activeSection), false);
             return;
         } else {
             await _changeRoute(undefined, false);
         }
+    }
+
+    function _withSection(route: AppRoute, section: string): AppRoute {
+        return section ? { ...route, section } : route;
     }
 }
 

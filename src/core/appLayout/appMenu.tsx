@@ -1,6 +1,6 @@
 import * as UECA from "ueca-react";
 import { Col, UIBaseModel, UIBaseParams, UIBaseStruct, useUIBase, NavItemModel, useNavItem, NavItemExpandableModel, useNavItemExpandable } from "@components";
-import { AppRoute } from "@core";
+import { AppRoute, runAsync } from "@core";
 import { HomeIcon, DocumentIcon } from "../misc/icons";
 import "./appMenu.css";
 
@@ -8,6 +8,7 @@ type AppMenuStruct = UIBaseStruct<{
     props: {
         iconsOnly: boolean;
         _activeRoute: AppRoute;
+        __revealedPath: string;
     };
 
     children: {
@@ -45,7 +46,10 @@ function useAppMenu(params?: AppMenuParams): AppMenuModel {
         props: {
             id: useAppMenu.name,
             iconsOnly: false,
-            _activeRoute: undefined
+            _activeRoute: undefined,
+            // Non-reactive: the path the rail has already been scrolled to, so a re-render for
+            // any other reason does not keep hauling the reader's scroll position back.
+            __revealedPath: undefined
         },
 
         children: {
@@ -192,11 +196,13 @@ function useAppMenu(params?: AppMenuParams): AppMenuModel {
         messages: {
             "App.Router.AfterRouteChange": async (route) => {
                 model._activeRoute = route;
+                runAsync(() => _revealActiveItem());
             },
         },
 
         init: async () => {
             model._activeRoute = await model.getRoute();
+            runAsync(() => _revealActiveItem());
         },
 
         // overflow is visible on purpose: the sidebar's scroll wrapper is the single scroller,
@@ -210,6 +216,41 @@ function useAppMenu(params?: AppMenuParams): AppMenuModel {
 
     const model = useUIBase(struct, params);
     return model;
+
+    // Private methods
+
+    // Only a dozen of the 21 chapters fit the rail, so the active one is often out of sight -
+    // after a pager jump, a cross-article link, or a deep link into the middle of the guide.
+    //
+    // Called a tick late, on purpose. The items re-render from _activeRoute, and until they have,
+    // the item reading as active is still the chapter being left. There is no draw of this
+    // component's own to hook either: AppMenu's View never reads _activeRoute - only the children's
+    // `active` bindings do - so AppMenu itself does not re-render when the route changes.
+    function _revealActiveItem() {
+        const path = model._activeRoute?.path;
+        if (!path || path === model.__revealedPath) {
+            return;
+        }
+        const item = [model.homeMenuItem, ...model.docsMenuItem.subItems].find((i) => i.active);
+        const el = item ? document.getElementById(item.htmlId()) : undefined;
+        const rail = el?.closest(".app-sidebar-scroll") as HTMLElement;
+        if (!el || !rail) {
+            return;
+        }
+        model.__revealedPath = path;
+
+        // Move the rail itself, never scrollIntoView: that walks every scrollable ancestor and
+        // drags the app shell along with it. And only when the item is actually outside - a click
+        // on a chapter already on screen should leave the rail exactly where the reader left it.
+        const item_r = el.getBoundingClientRect();
+        const rail_r = rail.getBoundingClientRect();
+        const margin = 12;
+        if (item_r.top < rail_r.top + margin) {
+            rail.scrollTop -= rail_r.top + margin - item_r.top;
+        } else if (item_r.bottom > rail_r.bottom - margin) {
+            rail.scrollTop += item_r.bottom - rail_r.bottom + margin;
+        }
+    }
 
     function useMenuItem(params: { text: string; route: AppRoute; icon?: React.ReactNode; number?: string }): NavItemModel {
         return useNavItem({

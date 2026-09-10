@@ -34,8 +34,20 @@ function useMarkdownPreview(params?: MarkdownPreviewParams): MarkdownPreviewMode
             }
             root.querySelectorAll("a[href]").forEach((el) => {
                 const a = el as HTMLAnchorElement;
+                // A bare "#section" resolves against <base href>, not against the article being
+                // read, so every one of them - the two written in the guide and the anchor every
+                // heading carries - means /ueca-react-doc/#section, which is Home. Anchoring the
+                // href to the current path makes the link honest to the status bar, middle-click
+                // and copy-link-address; an ordinary click is taken by the handler in the View,
+                // which routes to it so that the jump enters history as a route of its own.
+                const rawHref = a.getAttribute("href");
+                if (rawHref?.startsWith("#")) {
+                    a.setAttribute("href", window.location.pathname + window.location.search + rawHref);
+                    a.dataset.section = decodeURIComponent(rawHref.slice(1));
+                    return;
+                }
                 // a.protocol / a.hostname are the RESOLVED values, so this leaves relative
-                // article links, in-page fragments and mailto: alone without parsing anything.
+                // article links and mailto: alone without parsing anything.
                 const isWeb = a.protocol === "http:" || a.protocol === "https:";
                 if (!isWeb || a.hostname === window.location.hostname || a.target === "_blank") {
                     return;
@@ -55,6 +67,17 @@ function useMarkdownPreview(params?: MarkdownPreviewParams): MarkdownPreviewMode
                     const anchor = target.closest('a');
                     
                     if (anchor) {
+                        // A link to a section of this page: a route with a section, not a scroll.
+                        // The router owns the history entry, so Back leaves the section again, and
+                        // DocsScreen brings the view to whatever section the route names.
+                        const section = anchor.dataset.section;
+                        if (section) {
+                            e.preventDefault();
+                            const route = await model.getRoute();
+                            await model.bus.unicast("App.Router.GoToRoute", { ...route, section });
+                            return;
+                        }
+
                         const href = anchor.getAttribute('href');
                         const appRoutePath = href ? resolveDocPath(href) : undefined;
                         if (appRoutePath) {

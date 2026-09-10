@@ -135,6 +135,12 @@ something synchronously available (here, `window.location`) rather than from an 
   chunk, so a closed viewer costs the bundle nothing. **Keep it** — it is there on purpose.
 - Menu items carry a chapter `number` (`01`–`21`) rendered in the NavItem icon slot, so the
   numbering survives the collapse to an icon rail.
+- The rail scrolls the active chapter into view on every route change, and only when it is actually
+  off screen. `AppMenu` does this from its `App.Router.AfterRouteChange` handler and `init` via
+  `runAsync`, **not** from `draw` — its own `View` never reads `_activeRoute` (only the children's
+  `active` bindings do), so `AppMenu` does not re-render when the route changes and has no `draw`
+  of its own to hook. The tick of delay also matters: until the items re-render, the one reading as
+  active is still the chapter being left.
 - Screens compose their own content region: `useCRUDScreen({ contentPaddings: "none" })` forwards
   to `ScreenLayout`, which is how the docs article and the home hero own their padding.
 - An article page is a **band of fixed design width, centred** — `--band-w` (`--article-w` 900 +
@@ -238,6 +244,36 @@ To give any element a tooltip, spread the base-hook helper:
 
 When updating docs navigation, preserve this docs-first shape unless explicitly asked to redesign
 layout behavior.
+
+## Sections are part of the route
+
+**A link into a page is an address, not a scroll.** `Route` carries `section?: string` beside
+`path` (`components/navigation/router.tsx`) — beside, because `lookupRoute` matches the path with a
+regular expression and a `#id` glued onto it matches nothing. Everything else follows from that:
+
+| | |
+| --- | --- |
+| `AppBrowsingHistory` | owns the fragment. `_syncCurrentPath` reads it into `__activeSection`, `_routeToURL` writes it back, and `OnNavigate` reports it with the path |
+| `AppRouter` | carries it through `_syncCurrentRoute` (cold open) and `_onNavigateBrowsingHistory` (Back/Forward), and broadcasts it on `AfterRouteChange` |
+| `DocsScreen` | applies it — scrolls to the heading, or to the top of the article when the route names no section |
+| `DocsToc`, `markdownPreview` | **navigate** (`GoToRoute` with a `section`); neither scrolls anything itself |
+
+So Back and Forward move between sections like any other route, a section URL survives being
+pasted cold, and **nothing outside `AppBrowsingHistory` touches `history`**. Do not reintroduce a
+`pushState` / `replaceState` anywhere else: the service keys entries by an index in `history.state`,
+and an entry it did not create breaks the rollback arithmetic in `_browserNavigation`.
+
+That is also why in-page links must not stay native anchors. A fragment navigation performed by the
+browser pushes an entry the router never made, and the browser **copies the current entry's state
+into it** — two entries then claim the same index, and Back moves the URL while the app, seeing an
+index it thinks it is already on, does nothing.
+
+`<base href="/ueca-react-doc/">` is the reason a bare `href="#section"` cannot be left alone at all:
+it resolves against the base, so it means `/ueca-react-doc/#section`, which is Home. The `draw` pass
+in `markdownPreview.tsx` rewrites those hrefs to the current path — for the status bar, middle-click
+and copy-link-address — and stamps `data-section`, which is what the click handler routes on. This
+covers the anchor `rehype-autolink-headings` puts on every heading as well as the links written in
+the guide.
 
 ## Documentation Routing
 

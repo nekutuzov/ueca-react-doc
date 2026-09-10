@@ -21,7 +21,7 @@ type DocsTocStruct = UIBaseStruct<{
 
     methods: {
         entries: () => TocEntry[];
-        goTo: (id: string) => void;
+        goTo: (id: string) => Promise<void>;
     };
 }>;
 
@@ -40,25 +40,16 @@ function useDocsToc(params?: DocsTocParams): DocsTocModel {
         methods: {
             entries: () => _parse(model.source ?? "", model.maxLevel ?? 2),
 
-            goTo: (id) => {
-                // Not an <a href="#id">: this app sets <base href>, against which a bare
-                // fragment resolves to the base URL and navigates off the article.
-                const target = document.getElementById(id);
-                if (!target) {
-                    return;
-                }
-                // Scroll the article's own container rather than calling scrollIntoView, which
-                // walks up the ancestors and drags the app shell - top bar and all - off screen.
-                const scroller = target.closest(".app-content") as HTMLElement;
-                if (!scroller) {
-                    target.scrollIntoView({ block: "start" });
-                    return;
-                }
-                // Instant, not smooth: a smooth scroll over this distance is still animating
-                // when the next render lands, and the browser abandons it part-way - the jump
-                // stops a few hundred pixels short of the heading.
-                const delta = target.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-                scroller.scrollTo({ top: scroller.scrollTop + delta - 12 });
+            // A section is an address, so this navigates and lets the router bring the view to it -
+            // it does not scroll anything itself. That is what puts the jump in browser history,
+            // so Back returns to the section you came from, and what keeps a single component,
+            // DocsScreen, responsible for showing whatever section the current route names.
+            //
+            // Not an <a href="#id"> either: this app sets <base href>, against which a bare
+            // fragment resolves to the base URL and navigates off the article entirely.
+            goTo: async (id) => {
+                const route = await model.getRoute();
+                await model.bus.unicast("App.Router.GoToRoute", { ...route, section: id });
             }
         },
 
@@ -78,7 +69,7 @@ function useDocsToc(params?: DocsTocParams): DocsTocModel {
                                 key={e.id}
                                 type="button"
                                 className={`docs-toc-link docs-toc-level-${e.level}`}
-                                onClick={() => model.goTo(e.id)}
+                                onClick={async () => await model.goTo(e.id)}
                             >
                                 {e.text}
                             </button>

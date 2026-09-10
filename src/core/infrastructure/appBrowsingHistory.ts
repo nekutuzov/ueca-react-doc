@@ -5,6 +5,9 @@ import { asyncSafe, runAsync } from "./appUtils";
 type AppBrowsingHistoryStruct = BaseStruct<{
     props: {
         __activePath: string;
+        // The anchor within the page, kept beside the path rather than in it - route lookup
+        // matches on the path alone.
+        __activeSection: string;
         __baseURL: string;
         __appTitle: string;
         __currentHistoryIndex: number;
@@ -15,6 +18,7 @@ type AppBrowsingHistoryStruct = BaseStruct<{
 
     methods: {
         getActivePath: () => string;
+        getActiveSection: () => string;
         syncWithBrowser: () => void;
         open: (route: AnyRoute | string, newTab?: boolean) => Promise<void>;
         replace: (route: AnyRoute | string) => Promise<void>;
@@ -32,6 +36,8 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
         messages: {
             "App.BrowsingHistory.GetActivePath": async () => model.getActivePath(),
 
+            "App.BrowsingHistory.GetActiveSection": async () => model.getActiveSection(),
+
             "App.BrowsingHistory.Open": async (p) => await model.open(p.path, p.newTab),
 
             "App.BrowsingHistory.Replace": async (p) => await model.replace(p.path)
@@ -39,6 +45,8 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
 
         methods: {
             getActivePath: () => model.__activePath,
+
+            getActiveSection: () => model.__activeSection,
 
             syncWithBrowser: () => {
                 // Set initial history index (the top of the list)
@@ -128,11 +136,18 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
     function _syncCurrentPath() {
         if (!window.location.pathname.startsWith(model.__baseURL)) {
             model.__activePath = "";
+            model.__activeSection = "";
             return;
         }
         const path = window.location.pathname.substring(model.__baseURL.length);
         model.__activePath = path + decodeURIComponent(window.location.search);
+        model.__activeSection = _currentSection();
         _syncDocumentTitle();
+    }
+
+    // The fragment, without its "#" and decoded - the shape a route and getElementById want.
+    function _currentSection(): string {
+        return decodeURIComponent(window.location.hash.replace("#", ""));
     }
 
     function _syncDocumentTitle() {
@@ -178,10 +193,14 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
             history.replaceState({ index: model.__currentHistoryIndex }, "", window.location.href);
         }
         const state_index = history.state.index;
+        const section = _currentSection();
         if (model.__currentHistoryIndex === state_index) {
             let path = window.location.pathname.substring(model.__baseURL.length);
             path = path + decodeURIComponent(window.location.search);
-            if (path === model.__activePath) {
+            // The section is part of the comparison: two entries on one article differing only
+            // by their anchor are different addresses, and skipping here would leave the router
+            // unaware that Back had moved between them.
+            if (path === model.__activePath && section === model.__activeSection) {
                 return;
             }
             console.warn("Unexpected condition: AppBrowsingHistory._browserNavigation()");
@@ -189,7 +208,7 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
 
         let path = window.location.pathname.substring(model.__baseURL.length);
         path = path + decodeURIComponent(window.location.search);
-        const allowThisPath = await model.bus.unicast("App.BrowsingHistory.OnNavigate", path);
+        const allowThisPath = await model.bus.unicast("App.BrowsingHistory.OnNavigate", { path, section });
         if (UECA.isUndefined(allowThisPath) || allowThisPath) {
             model.__currentHistoryIndex = state_index;
             _syncCurrentPath();
@@ -231,6 +250,13 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
             }
         });
         url.pathname = parts.join("/"); // update dynamic path with processed path
+
+        // Only ever set, never cleared. A route object with no section is built from its path
+        // alone and so carries no fragment anyway; the one caller that arrives here with a hash
+        // already on it is _navigate, re-parsing a URL this function produced a moment ago.
+        if (route.section) {
+            url.hash = route.section;
+        }
 
         // Process search params            
         const searchParams = new URLSearchParams(url.search);
