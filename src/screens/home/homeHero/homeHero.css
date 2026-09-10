@@ -1,9 +1,23 @@
 /* Landing page. One loud element - the struct spine - and quiet everywhere else. */
 
+/* The same band the article pages use, not a width of its own: it keeps the content from
+   jumping sideways when you move between Home and a chapter, and it is what the top bar's
+   breadcrumb aligns to. */
 .home {
-    max-width: 940px;
-    padding: var(--space-huge) var(--space-medium) var(--space-huge);
+    /* width:100% is load-bearing. An auto cross-axis margin opts a flex item out of stretching,
+       so without it the hero shrink-wraps to its content - it sat ~740px wide, narrower than
+       its own max-width, and centred on that. Stretch first, then cap, then centre. */
+    width: 100%;
+    max-width: var(--band-w);
+    padding: var(--space-huge) var(--page-pad) var(--space-huge);
     margin: 0 auto;
+}
+
+/* The band places the hero; it does not fill it. Its blocks sit in the same text column an
+   article's prose does - --article-w less that column's own padding - so Home and a chapter
+   share both content edges, and the 220px the TOC would occupy stays empty here. */
+.home > * {
+    max-width: calc(var(--article-w) - 2 * var(--page-pad));
 }
 
 /* ---- Hero ---- */
@@ -261,7 +275,7 @@
 
 @media (max-width: 640px) {
     .home {
-        padding: var(--space-large) var(--space-small);
+        padding: var(--space-large) var(--page-pad);
     }
 
     .home-spine-row {

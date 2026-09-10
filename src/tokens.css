@@ -69,6 +69,10 @@
        there is nothing left to widen, so the page centres instead of growing. */
     --article-w: 900px;
     --band-w: calc(var(--article-w) + var(--toc-w));
+    /* The page's own left/right padding, shared by the article, the home hero and the top
+       bar's breadcrumb offset - the trail is aligned by arithmetic, so all three have to
+       read one value or they drift apart at the breakpoint below. */
+    --page-pad: var(--space-medium);
 
     /* ---- Icon sizes ---- */
     --icon-sm: 14px;
@@ -112,6 +116,13 @@
     --z-drawer: 1400;
     --z-drawer-panel: 1410;
     --z-toast: 2500;
+}
+
+/* Phone widths: the page gives back some of its gutter to the text. */
+@media (max-width: 700px) {
+    :root {
+        --page-pad: var(--space-small);
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

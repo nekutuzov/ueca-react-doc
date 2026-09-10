@@ -70,8 +70,12 @@ function useScreenLayout(params?: ScreenParams): ScreenLayoutModel {
                         className="app-topbar"
                         verticalAlign={"center"}
                         horizontalAlign={"spaceBetween"}
-                        padding={{ leftRight: "medium" }}
                         height={"var(--topbar-h)"}
+                        // Makes the bar a scroll container, which is the only way it can carry
+                        // the same scrollbar-gutter as the content below it - see the CSS.
+                        // Its padding is left to CSS for the same reason: the bar and the page
+                        // have to read one --page-pad, and the prop would write a fixed px.
+                        overflow={"hidden"}
                     >
                         <model.breadcrumbsControl.View />
                         <Row spacing={"tiny"} verticalAlign={"center"}>

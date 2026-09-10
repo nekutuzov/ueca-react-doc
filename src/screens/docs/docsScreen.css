@@ -18,11 +18,11 @@
        measure while code blocks and tables get the extra room. */
     min-width: 0;
     max-width: var(--article-w);
-    padding: var(--space-large) var(--space-medium) var(--space-huge);
+    padding: var(--space-large) var(--page-pad) var(--space-huge);
 }
 
 @media (max-width: 700px) {
     .docs-column {
-        padding: var(--space-medium) var(--space-small) var(--space-large);
+        padding: var(--space-medium) var(--page-pad) var(--space-large);
     }
 }

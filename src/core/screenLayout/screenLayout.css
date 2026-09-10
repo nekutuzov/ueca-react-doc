@@ -3,9 +3,18 @@
 .app-topbar {
     background: var(--surface);
     border-bottom: var(--hairline) solid var(--border);
+    /* The same gutter the page uses, so the trail starts level with the article at every
+       width - see the breadcrumb rule below. */
+    padding-inline: var(--page-pad);
     /* The bar is the only thing between the article and the window edge, so it stays put
        while the content scrolls under it. */
     flex: 0 0 auto;
+    /* The page below has a scrollbar and this bar does not, so "centred" would mean two
+       different places and the breadcrumb would miss the article it names by half a
+       scrollbar. Reserving the same gutter on both - on both edges, so it cancels out of
+       the centring entirely - is what makes the two agree. It needs the bar to be a scroll
+       container, hence overflow="hidden" in the JSX. */
+    scrollbar-gutter: stable both-edges;
 }
 
 /* The trail stays on one line. The bar has a fixed height, so a wrapped second line escapes it
@@ -15,6 +24,17 @@
     min-width: 0;
     overflow: hidden;
     font-size: var(--text-sm);
+}
+
+/* The trail names the article, so it starts where the article's text starts. The offset goes on
+   the breadcrumb component's own root rather than the <ol> inside it: that list is shrink-wrapped
+   to its labels, so a percentage there would resolve against the trail's own width instead of the
+   bar's. Both this and the page band centre the same region - see the scrollbar-gutter note on
+   .app-content, which is what keeps them from landing half a scrollbar apart - and --page-pad is
+   the page's own left padding, read by .docs-column and .home alike. Below the band width it
+   collapses to that padding alone, where the page is left-aligned and the trail already lines up. */
+.app-topbar > :has(> .ueca-breadcrumbs) {
+    margin-left: max(0px, (100% - var(--band-w)) / 2 + var(--page-pad));
 }
 
 .app-topbar .ueca-breadcrumbs > * {
@@ -61,4 +81,10 @@
        of scrolling. overflow itself is set as a prop in the JSX - see the note there. */
     min-height: 0;
     overscroll-behavior: contain;
+    /* Reserve the scrollbar's width on BOTH edges, so the centred page band lands at exactly
+       (region - band) / 2 whatever that scrollbar costs. The top bar has no scrollbar of its
+       own; without this the band sits half a scrollbar to the left of the breadcrumb that is
+       supposed to align with it. It also stops the page shifting when an article grows long
+       enough to need scrolling. */
+    scrollbar-gutter: stable both-edges;
 }

@@ -141,9 +141,20 @@ something synchronously available (here, `window.location`) rather than from an 
   `--toc-w` 220) with `margin-inline: auto` on `.docs-layout`. Prose is capped at `--measure`
   and the widest shipped code block fits `--article-w`, so past ~1400px there is nothing extra
   width can be spent on; left-aligned, the whole surplus piled up in one void on the right.
-  The home hero centres the same way (`max-width: 940px`). The top bar stays full-bleed, so on a
-  wide window the breadcrumb trail no longer starts at the article's left edge — that is the
-  accepted trade, not an oversight.
+  The home hero centres on the same band, and caps its own blocks at the article's text column so
+  Home and a chapter share both content edges.
+- **The breadcrumb is aligned to the article by arithmetic**, not by luck:
+  `.app-topbar > :has(> .ueca-breadcrumbs)` carries `margin-left: max(0px, (100% - var(--band-w))
+  / 2 + var(--page-pad))`. Three things have to hold for it, and breaking any one of them slides
+  the trail off the article's left edge:
+  - `--page-pad` is the page gutter, read by `.docs-column`, `.home` **and** `.app-topbar`. The
+    top bar's padding is CSS, not a `padding` prop, because the prop writes a fixed px.
+  - both the bar and `.app-content` set `scrollbar-gutter: stable both-edges`. The page has a
+    scrollbar and the bar does not, so without it "centred" means two places half a scrollbar
+    apart. Reserving it on *both* edges is what cancels it out of the centring; that in turn
+    needs the bar to be a scroll container, hence `overflow={"hidden"}` on the top bar `Row`.
+  - the offset goes on the breadcrumb component's root, not on `.ueca-breadcrumbs` itself — that
+    `<ol>` is shrink-wrapped, so a percentage there resolves against the trail's own width.
 
 ## Theming
 
