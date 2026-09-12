@@ -18,6 +18,8 @@ type BasePartialStruct = UECA.ComponentStruct<{
         goToRoute: (route: AppRoute) => Promise<boolean>;
         setRoute: (route: AppRoute) => Promise<boolean>;
         setRouteParams: (params: Record<string, unknown>, patch: boolean) => Promise<void>;
+        // Patches only the anchor of the current address - the screen on show stays mounted.
+        setRouteSection: (section: string) => Promise<void>;
         openNewTab: (route: AppRoute) => Promise<void>;
 
         // Dialogs
@@ -87,6 +89,8 @@ function useBase<T extends BasePartialStruct>(extStruct: T, params?: BaseParams<
             goToRoute: async (route) => await model.bus.unicast("App.Router.GoToRoute", route),
             setRoute: async (route) => await model.bus.unicast("App.Router.SetRoute", route),
             setRouteParams: async (params, patch) => await model.bus.unicast("App.Router.SetRouteParams", { params, patch }),
+
+            setRouteSection: async (section) => await model.bus.unicast("App.Router.SetRouteParams", { section }),
             openNewTab: async (route) => await model.bus.unicast("App.Router.OpenNewTab", route),
 
             // Modal dialogs

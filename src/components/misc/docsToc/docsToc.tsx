@@ -48,8 +48,10 @@ function useDocsToc(params?: DocsTocParams): DocsTocModel {
             // Not an <a href="#id"> either: this app sets <base href>, against which a bare
             // fragment resolves to the base URL and navigates off the article entirely.
             goTo: async (id) => {
-                const route = await model.getRoute();
-                await model.bus.unicast("App.Router.GoToRoute", { ...route, section: id });
+                // A patch of the current address, not a route change: the article is already on
+                // screen and only the anchor moves. GoToRoute would hand the router a new route
+                // object, which rebuilds the view and re-renders the whole article to scroll it.
+                await model.setRouteSection(id);
             }
         },
 

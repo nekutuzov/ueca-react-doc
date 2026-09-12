@@ -73,8 +73,9 @@ function useMarkdownPreview(params?: MarkdownPreviewParams): MarkdownPreviewMode
                         const section = anchor.dataset.section;
                         if (section) {
                             e.preventDefault();
-                            const route = await model.getRoute();
-                            await model.bus.unicast("App.Router.GoToRoute", { ...route, section });
+                            // Patches the anchor of the address this article already occupies -
+                            // see DocsToc.goTo for why this is not a route change.
+                            await model.setRouteSection(section);
                             return;
                         }
 

@@ -1,5 +1,5 @@
 import * as UECA from "ueca-react";
-import { AnyRoute, UIBaseModel, UIBaseParams, UIBaseStruct, useUIBase } from "@components";
+import { AnyRoute, UIBaseModel, UIBaseParams, UIBaseStruct, useUIBase, routeKey } from "@components";
 import { AppRoute, OtherLayoutModel, AppLayoutModel, useAppLayout, useOtherLayout } from "@core";
 
 type AppRouterStruct = UIBaseStruct<{
@@ -37,7 +37,7 @@ function useAppRouter(params?: AppRouterParams): AppRouterModel {
 
             "App.Router.OpenNewTab": async (route) => await model.bus.unicast("App.BrowsingHistory.Open", { path: route, newTab: true }),
 
-            "App.Router.SetRouteParams": async (p) => await _setRouteParams(p.params, p.patch),
+            "App.Router.SetRouteParams": async (p) => await _setRouteParams(p),
 
             "App.BrowsingHistory.OnNavigate": async (p) => await _onNavigateBrowsingHistory(p.path, p.section)
         },
@@ -97,19 +97,39 @@ function useAppRouter(params?: AppRouterParams): AppRouterModel {
         return false;
     }
 
-    async function _setRouteParams(params: Record<string, unknown>, patch: boolean) {
-        // Generic method to update route params for the current active layout's route
-        const route = UECA.clone(model._activeLayout.route as AnyRoute);
-        if (!route) {
+    // Patches the address of the screen already on show. Everything here writes THROUGH the live
+    // route object rather than replacing it: assigning a new route to the layout is what makes the
+    // router rebuild _currentView, and rebuilding it tears down the mounted screen. That is the
+    // whole difference between this and _changeRoute, and it is why an anchor belongs here.
+    async function _setRouteParams(p: { params?: Record<string, unknown>, patch?: boolean, section?: string }) {
+        const activeRoute = model._activeLayout?.route as AnyRoute;
+        if (!activeRoute) {
             return;
         }
-        if (patch) {
-            route.params = { ...route.params, ...params };
-        } else {
-            route.params = { ...params }; // TODO: unnecessery? remove?
+        const route = UECA.clone(activeRoute);
+        if (p.params) {
+            route.params = p.patch ? { ...route.params, ...p.params } : { ...p.params };
+            activeRoute.params = route.params;
         }
-        (model._activeLayout.route as AnyRoute).params = route.params;
-        await model.bus.unicast("App.BrowsingHistory.Replace", { path: route });
+
+        // A section changed by hand is somewhere the reader chose to go, so it earns a history
+        // entry and Back returns to the section they left. A param patch is the same view in a
+        // different state, so it rewrites the entry it is on.
+        const sectionChanged = "section" in p && p.section !== activeRoute.section;
+        if (sectionChanged) {
+            route.section = p.section;
+            activeRoute.section = p.section;
+        }
+        await model.bus.unicast(
+            sectionChanged ? "App.BrowsingHistory.Open" : "App.BrowsingHistory.Replace",
+            { path: route }
+        );
+
+        // Announced only for a section, and only because nothing else would say so: the screen is
+        // not rebuilt on a patch. A params patch stays silent as it always has.
+        if (sectionChanged) {
+            await model.bus.broadcast(null, "App.Router.AfterRouteChange", route as AppRoute);
+        }
     }
 
     // Back and Forward land here. The section travels with the path, so an entry that names an
@@ -120,12 +140,31 @@ function useAppRouter(params?: AppRouterParams): AppRouterModel {
         if (!route) {
             return await _changeRoute(undefined, true);
         }
+
+        // Back and Forward between two anchors of the SAME screen are an address change, not a
+        // route change - the same distinction _setRouteParams draws. Routing here would replace the
+        // layout's route object, rebuild the view and drop the reader at the top of a freshly
+        // rendered screen, which is precisely what the anchor was supposed to avoid. The browser
+        // has already moved, so nothing is written back to history: the live route is brought into
+        // line and the change is announced.
+        // Narrow on purpose - only when the anchor is the sole difference. routeKey rather than
+        // raw .path so a parametric route switches records properly, and params must match too: a
+        // query-only change is patched by rebuilding the view with new params, which is what
+        // refreshes a screen's routeParams prop.
+        const activeRoute = model._activeLayout?.route as AnyRoute;
+        const sectionOnly = activeRoute
+            && routeKey(activeRoute) === routeKey(route)
+            && UECA.isEqual(activeRoute.params ?? {}, route.params ?? {});
+        if (sectionOnly) {
+            activeRoute.section = section;
+            await model.bus.broadcast(null, "App.Router.AfterRouteChange", { ...activeRoute } as AppRoute);
+            return true;
+        }
         return await _changeRoute(_withSection(route, section), true);
     }
 
     async function _syncCurrentRoute() {
-        const activePath = await model.bus.unicast("App.BrowsingHistory.GetActivePath");
-        const activeSection = await model.bus.unicast("App.BrowsingHistory.GetActiveSection");
+        const { path: activePath, section: activeSection } = await model.bus.unicast("App.BrowsingHistory.GetActiveAddress");
         const otherLayoutRoute = model.otherLayout.lookupRoute(activePath);
         if (otherLayoutRoute) {
             await _changeRoute(otherLayoutRoute, true);

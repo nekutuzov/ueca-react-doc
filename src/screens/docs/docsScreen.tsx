@@ -3,7 +3,7 @@ import {
     ScreenBaseModel, ScreenBaseParams, ScreenBaseStruct, useScreenBase, Col, Row, useMarkdownPreview,
     MarkdownPreviewModel, DocsTocModel, useDocsToc, DocsPagerModel, useDocsPager
 } from "@components";
-import { Breadcrumb, CRUDScreenModel, useCRUDScreen, runAsync } from "@core";
+import { Breadcrumb, CRUDScreenModel, useCRUDScreen } from "@core";
 import "./docsScreen.css";
 // The guide moved from docs/ to docs/raw/original/ in ueca-react 3.0. Order and titles below
 // follow docs/raw/index.md, "UECA-React Programming Guide".
@@ -105,6 +105,11 @@ const DOC_ORDER: DocArticle[] = [
 type DocsScreenStruct = ScreenBaseStruct<{
     props: {
         article: DocArticle;
+        // Non-reactive: the section the address now names, and whether the next draw still owes it
+        // a scroll. A flag rather than "is it non-empty", because an address with no section is
+        // itself something to apply — it means the top of the article.
+        __pendingSection: string;
+        __sectionPending: boolean;
     };
 
     children: {
@@ -122,7 +127,9 @@ function useDocsScreen(params?: DocsScreenParams): DocsScreenModel {
     const struct: DocsScreenStruct = {
         props: {
             id: useDocsScreen.name,
-            article: "introduction"
+            article: "introduction",
+            __pendingSection: undefined,
+            __sectionPending: false
         },
 
         children: {
@@ -159,18 +166,35 @@ function useDocsScreen(params?: DocsScreenParams): DocsScreenModel {
 
         messages: {
             // The section of the route is view state this screen owns: whenever the address names
-            // one, the article is brought to it. A tick late, because the article for a route that
-            // also changed the path has not rendered when this arrives.
+            // one, the article is brought to it. Recorded here and applied in draw — the article
+            // for a route that also changed the path has not rendered yet at this point.
             "App.Router.AfterRouteChange": async (route) => {
-                runAsync(() => _showSection(route.section));
+                model.__pendingSection = route.section;
+                model.__sectionPending = true;
+                // Same article means only the anchor moved: the screen is not being rebuilt, so no
+                // draw is coming and this is the moment to scroll. A different path is a different
+                // article that has not rendered yet — draw applies it once it has.
+                if (route.path === _articleRoutePath()) {
+                    _applyPendingSection();
+                }
             }
         },
 
         // A route resolved before this screen existed broadcast to nobody, so the screen asks. This
         // is the cold-open case: a link to a section, pasted or followed from outside.
+        // A deep link resolved before this screen existed broadcast to nobody, so the screen asks.
         init: async () => {
             const route = await model.getRoute();
-            runAsync(() => _showSection(route?.section));
+            model.__pendingSection = route?.section;
+            model.__sectionPending = true;
+        },
+
+        // The section is applied HERE, not from the message handler, because draw runs after the
+        // article has rendered and BEFORE the browser paints. Scrolling a tick later instead let a
+        // frame reach the screen at the top of the article first — the article appeared, jumped to
+        // the top, then jumped again to the anchor. One paint, one position.
+        draw: () => {
+            _applyPendingSection();
         },
 
         View: () => <model.crudScreen.View />
@@ -178,6 +202,18 @@ function useDocsScreen(params?: DocsScreenParams): DocsScreenModel {
 
     const model = useScreenBase(struct, params);
     return model;
+
+    // Runs from both the address change and draw, whichever gets there first, and only once per
+    // change. draw is the safety net for the case where the article itself is (re)rendering: it
+    // fires after the render and before the browser paints, so the reader never sees the article
+    // at the top on its way to the anchor.
+    function _applyPendingSection() {
+        if (!model.__sectionPending) {
+            return;
+        }
+        model.__sectionPending = false;
+        _showSection(model.__pendingSection);
+    }
 
     // Brings the article to the section the route names, or to its top when it names none - an
     // address without a section is the article itself, which is also what makes moving between

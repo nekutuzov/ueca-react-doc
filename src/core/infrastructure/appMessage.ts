@@ -60,18 +60,24 @@ type MiscMessages = {
     // mode (the top-bar toggle) stays in sync without polling.
     "App.Theme.Changed": { in: { theme: ThemeId, mode: ThemeMode } };
 
-    "App.BrowsingHistory.GetActivePath": { out: string };
-    "App.BrowsingHistory.GetActiveSection": { out: string };
+    // One message, because the path and the section are one thing: the address. Two getters would
+    // be read across two awaits, and anything arriving in between - a popstate, a Replace - yields
+    // a path from one moment paired with a section from another.
+    "App.BrowsingHistory.GetActiveAddress": { out: { path: string, section?: string } };
     "App.BrowsingHistory.Open": { in: { path: AnyRoute | string, newTab?: boolean } };
     "App.BrowsingHistory.Replace": { in: { path: AnyRoute | string } };
     // Carries the section as well as the path, so Back and Forward restore an anchor within the
     // page the same way they restore the page.
-    "App.BrowsingHistory.OnNavigate": { in: { path: string, section: string }, out: boolean }
+    "App.BrowsingHistory.OnNavigate": { in: { path: string, section?: string }, out: boolean }
 
     "App.Router.GetRoute": { out: AppRoute };
     "App.Router.GoToRoute": { in: AppRoute; out: boolean };
     "App.Router.SetRoute": { in: AppRoute; out: boolean };
-    "App.Router.SetRouteParams": { in: { params: Record<string, unknown>, patch: boolean } };
+    // Patches the address of the screen already on show, rather than routing to one. The section
+    // rides here for exactly that reason: an anchor names a place inside the current screen, so
+    // sending it through GoToRoute would hand the router a new route object, rebuild the view and
+    // throw away the mounted screen to scroll it.
+    "App.Router.SetRouteParams": { in: { params?: Record<string, unknown>, patch?: boolean, section?: string } };
     "App.Router.BeforeRouteChange": { in: AppRoute, out: boolean };
     "App.Router.AfterRouteChange": { in: AppRoute };
     "App.Router.OpenNewTab": { in: AppRoute };

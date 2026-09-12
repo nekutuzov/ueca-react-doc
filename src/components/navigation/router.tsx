@@ -1,3 +1,4 @@
+import * as React from "react";
 import * as UECA from "ueca-react";
 import { UIBaseModel, UIBaseParams, UIBaseStruct, useUIBase } from "@components";
 import { AppURL } from "@core";
@@ -29,6 +30,22 @@ type Route<R extends Routing> = {
 }[keyof R];
 
 type AnyRoute = Route<Routing>;
+
+// Canonical route identity: ":seg" path tokens are substituted with their values, and the query
+// pattern is dropped. Two routes are "the same screen" only when these keys match — so a different
+// path segment (/docs/a vs /docs/b) is a DIFFERENT route and the screen is rebuilt, while a change
+// that leaves the key alone keeps the same screen instance.
+//
+// `section` is excluded on purpose, and in this app that is the case that matters: an anchor names
+// a place WITHIN the article, so following one must not tear the article down and re-render every
+// heading and code block just to scroll a few hundred pixels.
+function routeKey(route: AnyRoute): string {
+    if (!route) {
+        return "";
+    }
+    const path = route.path.split("?")[0]; // the query pattern does not affect screen identity
+    return path.replace(/:([^/?]+)/g, (_m, name) => String(route.params?.[name] ?? ""));
+}
 
 type RouterParams = UIBaseParams<RouterStruct>;
 type RouterModel = UIBaseModel<RouterStruct>;
@@ -86,7 +103,9 @@ function useRouter(params?: RouterParams): RouterModel {
             }
         },
 
-        View: () => <>{model._currentView}</>
+        // Keyed by routeKey: identity, not the route object, is what decides whether the mounted
+        // screen is kept or rebuilt. A section-only change resolves to the same key.
+        View: () => <React.Fragment key={routeKey(model.route)}>{model._currentView}</React.Fragment>
     }
 
     const _rootURLTag = "/841408C0-C813-4CE9-9CD4-56968B735962/"; // Fake URL base for routes replacing the base. See routes starting with "//"
@@ -172,4 +191,4 @@ function useRouter(params?: RouterParams): RouterModel {
 
 const Router = UECA.getFC(useRouter);
 
-export { Routing, Route, AnyRoute, RouterModel, useRouter, Router }
+export { Routing, Route, AnyRoute, RouterModel, useRouter, Router, routeKey }

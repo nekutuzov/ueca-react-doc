@@ -276,7 +276,23 @@ regular expression and a `#id` glued onto it matches nothing. Everything else fo
 | `AppBrowsingHistory` | owns the fragment. `_syncCurrentPath` reads it into `__activeSection`, `_routeToURL` writes it back, and `OnNavigate` reports it with the path |
 | `AppRouter` | carries it through `_syncCurrentRoute` (cold open) and `_onNavigateBrowsingHistory` (Back/Forward), and broadcasts it on `AfterRouteChange` |
 | `DocsScreen` | applies it — scrolls to the heading, or to the top of the article when the route names no section |
-| `DocsToc`, `markdownPreview` | **navigate** (`GoToRoute` with a `section`); neither scrolls anything itself |
+| `DocsToc`, `markdownPreview` | **patch the address** (`model.setRouteSection(id)`); neither scrolls anything itself |
+
+**Moving to an anchor patches the address; it does not route.** `App.Router.SetRouteParams` is the
+"change the address of the screen already on show" message, and `section` rides on it for exactly
+that reason. The difference is not cosmetic:
+
+- `_changeRoute` assigns a **new route object** to the layout, which fires the router's
+  `onChangeRoute`, rebuilds `_currentView`, and **tears down the mounted screen** — the whole
+  article re-renders, markdown and syntax highlighting included, just to scroll a few hundred
+  pixels. It also reset the scroll to the top first, which is what made an anchor click blink.
+- `_setRouteParams` writes **through** the live route object, so the router never rebuilds anything.
+
+`_onNavigateBrowsingHistory` draws the same line: Back and Forward between two anchors of the same
+screen patch the live route and announce it, and only a change of screen goes through
+`_changeRoute`. Because the screen is not rebuilt on a patch, **`DocsScreen` applies the section
+straight from its `AfterRouteChange` handler** when the path is unchanged, and falls back to `draw`
+— after render, before paint — when the article itself is (re)rendering.
 
 So Back and Forward move between sections like any other route, a section URL survives being
 pasted cold, and **nothing outside `AppBrowsingHistory` touches `history`**. Do not reintroduce a

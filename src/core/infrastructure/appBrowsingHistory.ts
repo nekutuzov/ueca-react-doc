@@ -18,7 +18,7 @@ type AppBrowsingHistoryStruct = BaseStruct<{
 
     methods: {
         getActivePath: () => string;
-        getActiveSection: () => string;
+        getActiveSection: () => string | undefined;
         syncWithBrowser: () => void;
         open: (route: AnyRoute | string, newTab?: boolean) => Promise<void>;
         replace: (route: AnyRoute | string) => Promise<void>;
@@ -34,9 +34,13 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
         },
 
         messages: {
-            "App.BrowsingHistory.GetActivePath": async () => model.getActivePath(),
-
-            "App.BrowsingHistory.GetActiveSection": async () => model.getActiveSection(),
+            // Both halves in one reply. The two methods below stay separate because a method call
+            // is synchronous and nothing can interleave; a bus round trip is where time passes, so
+            // that is where the address has to be read atomically.
+            "App.BrowsingHistory.GetActiveAddress": async () => ({
+                path: model.getActivePath(),
+                section: model.getActiveSection()
+            }),
 
             "App.BrowsingHistory.Open": async (p) => await model.open(p.path, p.newTab),
 
@@ -136,7 +140,7 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
     function _syncCurrentPath() {
         if (!window.location.pathname.startsWith(model.__baseURL)) {
             model.__activePath = "";
-            model.__activeSection = "";
+            model.__activeSection = undefined;
             return;
         }
         const path = window.location.pathname.substring(model.__baseURL.length);
@@ -146,8 +150,8 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
     }
 
     // The fragment, without its "#" and decoded - the shape a route and getElementById want.
-    function _currentSection(): string {
-        return decodeURIComponent(window.location.hash.replace("#", ""));
+    function _currentSection(): string | undefined {
+        return decodeURIComponent(window.location.hash.replace("#", "")) || undefined;
     }
 
     function _syncDocumentTitle() {
