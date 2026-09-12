@@ -14,6 +14,7 @@ export * from "./infrastructure/appTheme";
 export * from "./infrastructure/appThemeManager";
 export * from "./infrastructure/appTooltipManager";
 export * from "./misc/overlayPosition";
+export * from "./misc/sectionScroll";
 export * from "./appLayout/appLayout";
 export * from "./appLayout/otherLayout";
 export * from "./appLayout/appMenu";

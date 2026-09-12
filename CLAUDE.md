@@ -294,11 +294,22 @@ screen on show patches. An earlier version short-circuited a section-only Back i
 the rebuild, which looked equivalent and was not: the two paths deliver the section at different
 moments relative to the render.
 
-`DocsScreen` applies the section straight from its `AfterRouteChange` handler when the path is
-unchanged, and from `draw` — after render, before paint — when the article is (re)rendering. It then
-**corrects once more asynchronously**, because a heading's position can still move under the first
-measurement (an image with no intrinsic dimensions is the usual cause; the guide has a 530px
-diagram). Without that second pass a Back landed 20px short of where the click had put it.
+**Applying a section is `showSection(rootId, section)`** in `core/misc/sectionScroll.ts` — shared
+with MLWebApp, because every part of it fails quietly if you get it wrong:
+
+- it finds the scrolling box by **walking up from the target**, not by naming a class. A screen's own
+  content box is often the scroller and often is not; one that nests its own scrolling panel moves
+  the panel;
+- a section naming an element **not in the DOM** leaves the view alone rather than jumping to the
+  top — that is what scopes a section to the tab or content currently rendered;
+- it scrolls once now and **corrects once asynchronously**, because a heading moves under the first
+  measurement while anything above it is settling (an image with no intrinsic dimensions is the
+  usual cause; the guide has a 530px diagram). Without the second pass a Back landed 20px short.
+
+`DocsScreen` calls it from `draw` — after render, before paint — and from its `AfterRouteChange`
+handler **a tick later, never straight away**. That ordering is load-bearing: `AfterRouteChange`
+fires *before* React commits, so an immediate apply scrolls the outgoing DOM and spends the one-shot
+flag, after which the rebuild resets the scroll and `draw` has nothing left to do.
 
 A section near the end of a short article cannot reach the top of the viewport — the browser clamps
 the scroll. That is not a bug; check the article's height before treating it as one.
