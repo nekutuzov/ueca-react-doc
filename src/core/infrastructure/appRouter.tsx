@@ -1,5 +1,5 @@
 import * as UECA from "ueca-react";
-import { AnyRoute, UIBaseModel, UIBaseParams, UIBaseStruct, useUIBase, routeKey } from "@components";
+import { AnyRoute, UIBaseModel, UIBaseParams, UIBaseStruct, useUIBase } from "@components";
 import { AppRoute, OtherLayoutModel, AppLayoutModel, useAppLayout, useOtherLayout } from "@core";
 
 type AppRouterStruct = UIBaseStruct<{
@@ -141,25 +141,15 @@ function useAppRouter(params?: AppRouterParams): AppRouterModel {
             return await _changeRoute(undefined, true);
         }
 
-        // Back and Forward between two anchors of the SAME screen are an address change, not a
-        // route change - the same distinction _setRouteParams draws. Routing here would replace the
-        // layout's route object, rebuild the view and drop the reader at the top of a freshly
-        // rendered screen, which is precisely what the anchor was supposed to avoid. The browser
-        // has already moved, so nothing is written back to history: the live route is brought into
-        // line and the change is announced.
-        // Narrow on purpose - only when the anchor is the sole difference. routeKey rather than
-        // raw .path so a parametric route switches records properly, and params must match too: a
-        // query-only change is patched by rebuilding the view with new params, which is what
-        // refreshes a screen's routeParams prop.
-        const activeRoute = model._activeLayout?.route as AnyRoute;
-        const sectionOnly = activeRoute
-            && routeKey(activeRoute) === routeKey(route)
-            && UECA.isEqual(activeRoute.params ?? {}, route.params ?? {});
-        if (sectionOnly) {
-            activeRoute.section = section;
-            await model.bus.broadcast(null, "App.Router.AfterRouteChange", { ...activeRoute } as AppRoute);
-            return true;
-        }
+        // Back and Forward are TRUE NAVIGATION, always - they replay an address the reader chose,
+        // and the app routes to it like any other. Only an action the app itself takes within the
+        // screen on show ("stay here and update the URL") patches instead; that is _setRouteParams,
+        // and history traversal is not that.
+        //
+        // An earlier version short-circuited a section-only Back into a patch to avoid the rebuild.
+        // It looked equivalent and was not: the two paths deliver the section at different moments
+        // relative to the render, and Back through a rebuild left the reader wherever the
+        // pre-layout measurement happened to point.
         return await _changeRoute(_withSection(route, section), true);
     }
 

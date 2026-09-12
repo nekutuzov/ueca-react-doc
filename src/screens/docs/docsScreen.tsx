@@ -3,8 +3,11 @@ import {
     ScreenBaseModel, ScreenBaseParams, ScreenBaseStruct, useScreenBase, Col, Row, useMarkdownPreview,
     MarkdownPreviewModel, DocsTocModel, useDocsToc, DocsPagerModel, useDocsPager
 } from "@components";
-import { Breadcrumb, CRUDScreenModel, useCRUDScreen } from "@core";
+import { Breadcrumb, CRUDScreenModel, useCRUDScreen, runAsync } from "@core";
 import "./docsScreen.css";
+
+// Breathing room between the top bar and the heading a section link lands on.
+const SECTION_INSET = 12;
 // The guide moved from docs/ to docs/raw/original/ in ueca-react 3.0. Order and titles below
 // follow docs/raw/index.md, "UECA-React Programming Guide".
 import introductionDoc from "../../../node_modules/ueca-react/docs/raw/original/Introduction to UECA-React.md?raw";
@@ -218,7 +221,21 @@ function useDocsScreen(params?: DocsScreenParams): DocsScreenModel {
     // Brings the article to the section the route names, or to its top when it names none - an
     // address without a section is the article itself, which is also what makes moving between
     // chapters start at the beginning instead of inheriting the last one's scroll.
+    // Applied twice: once before the browser paints, so no frame shows the article at the wrong
+    // place, and once more after it has laid the article out for real.
+    //
+    // The second pass is not belt-and-braces, it is the correction that matters. The first runs
+    // from draw, while a heading's position can still move under it - an image without intrinsic
+    // dimensions is the big one, and the guide has a 530px diagram. Measuring then and trusting the
+    // number left a Back into a section of that article 474px adrift with the right URL on screen:
+    // exactly the "URL says one thing, page shows another" the reader sees. Correcting only when
+    // the target actually moved keeps the common case to one scroll and no visible jump.
     function _showSection(section?: string) {
+        _scrollToSection(section);
+        runAsync(() => _scrollToSection(section, /*onlyIfAdrift*/ true));
+    }
+
+    function _scrollToSection(section: string | undefined, onlyIfAdrift = false) {
         const article = document.getElementById(model.markdownPreview.htmlId());
         const scroller = article?.closest(".app-content") as HTMLElement;
         if (!scroller) {
@@ -226,15 +243,20 @@ function useDocsScreen(params?: DocsScreenParams): DocsScreenModel {
         }
         const target = section ? document.getElementById(section) : undefined;
         if (!target) {
-            scroller.scrollTo({ top: 0 });
+            if (!onlyIfAdrift) {
+                scroller.scrollTo({ top: 0 });
+            }
             return;
         }
         // Scroll the article's own container rather than calling scrollIntoView, which walks up
         // the ancestors and drags the app shell - top bar and all - off screen. Instant, not
         // smooth: a smooth scroll over this distance is still animating when the next render
         // lands, and the browser abandons it part-way, a few hundred pixels short.
-        const delta = target.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-        scroller.scrollTo({ top: scroller.scrollTop + delta - 12 });
+        const delta = target.getBoundingClientRect().top - scroller.getBoundingClientRect().top - SECTION_INSET;
+        if (onlyIfAdrift && Math.abs(delta) <= 1) {
+            return;
+        }
+        scroller.scrollTo({ top: scroller.scrollTop + delta });
     }
 
     function _breadCrumbs(): Breadcrumb[] {

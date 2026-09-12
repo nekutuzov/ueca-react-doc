@@ -288,11 +288,20 @@ that reason. The difference is not cosmetic:
   pixels. It also reset the scroll to the top first, which is what made an anchor click blink.
 - `_setRouteParams` writes **through** the live route object, so the router never rebuilds anything.
 
-`_onNavigateBrowsingHistory` draws the same line: Back and Forward between two anchors of the same
-screen patch the live route and announce it, and only a change of screen goes through
-`_changeRoute`. Because the screen is not rebuilt on a patch, **`DocsScreen` applies the section
-straight from its `AfterRouteChange` handler** when the path is unchanged, and falls back to `draw`
-— after render, before paint — when the article itself is (re)rendering.
+**Back and Forward are true navigation — always.** They replay an address the reader chose, so they
+go through `_changeRoute` like any other route change; only an action the app takes *within* the
+screen on show patches. An earlier version short-circuited a section-only Back into a patch to skip
+the rebuild, which looked equivalent and was not: the two paths deliver the section at different
+moments relative to the render.
+
+`DocsScreen` applies the section straight from its `AfterRouteChange` handler when the path is
+unchanged, and from `draw` — after render, before paint — when the article is (re)rendering. It then
+**corrects once more asynchronously**, because a heading's position can still move under the first
+measurement (an image with no intrinsic dimensions is the usual cause; the guide has a 530px
+diagram). Without that second pass a Back landed 20px short of where the click had put it.
+
+A section near the end of a short article cannot reach the top of the viewport — the browser clamps
+the scroll. That is not a bug; check the article's height before treating it as one.
 
 So Back and Forward move between sections like any other route, a section URL survives being
 pasted cold, and **nothing outside `AppBrowsingHistory` touches `history`**. Do not reintroduce a
