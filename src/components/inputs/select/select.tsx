@@ -67,7 +67,9 @@ function useSelect<T = string>(params?: SelectParams<T>): SelectModel<T> {
         View: () => {
             const colorClass = resolvePaletteColor(model.color);
             const sizeClass = model.size ? `ueca-select-${model.size}` : "";
-            const className = `ueca-select ueca-select-${model.variant} ${sizeClass} ${!model.isValid() ? "ueca-select-error" : ""} ${model.disabled ? "ueca-select-disabled" : ""}`.trim();
+            const invalid = !model.isValid();
+            const helperShown = invalid || !!model.helperTextView;
+            const className = `ueca-select ueca-select-${model.variant} ${sizeClass} ${invalid ? "ueca-select-error" : ""} ${model.disabled ? "ueca-select-disabled" : ""}`.trim();
 
             return (
                 <div
@@ -79,16 +81,19 @@ function useSelect<T = string>(params?: SelectParams<T>): SelectModel<T> {
                     } as React.CSSProperties}
                 >
                     {model.labelView && (
-                        <label className="ueca-select-label">
+                        <label htmlFor={_selectId()} className="ueca-select-label">
                             {model.labelView}
-                            {model.required && <span className="ueca-select-required"> *</span>}
+                            {model.required && <span className="ueca-select-required" aria-hidden="true"> *</span>}
                         </label>
                     )}
                     <select
+                        id={_selectId()}
                         className="ueca-select-input"
                         value={String(model.value)}
                         disabled={model.disabled}
-                        required={model.required}                        
+                        required={model.required}
+                        aria-invalid={invalid || undefined}
+                        aria-describedby={helperShown ? _helperId() : undefined}
                         onChange={_handleChange}
                         onFocus={_handleFocus}
                         onBlur={_handleBlur}
@@ -108,9 +113,9 @@ function useSelect<T = string>(params?: SelectParams<T>): SelectModel<T> {
                             </option>
                         ))}
                     </select>
-                    {(model.helperTextView || !model.isValid()) && (
-                        <div className={`ueca-select-helper-text ${!model.isValid() ? "ueca-select-helper-text-error" : ""}`}>
-                            {!model.isValid() ? model.getValidationError() : model.helperTextView}
+                    {helperShown && (
+                        <div id={_helperId()} className={`ueca-select-helper-text ${invalid ? "ueca-select-helper-text-error" : ""}`}>
+                            {invalid ? model.getValidationError() : model.helperTextView}
                         </div>
                     )}
                 </div>
@@ -122,6 +127,16 @@ function useSelect<T = string>(params?: SelectParams<T>): SelectModel<T> {
     return model;
 
     // Private methods
+
+    // Derived from the model's DOM id: the label's htmlFor and the select's aria-describedby point at these.
+    function _selectId(): string {
+        return `${model.htmlId()}-select`;
+    }
+
+    function _helperId(): string {
+        return `${model.htmlId()}-helper`;
+    }
+
     function _handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
         const newValue = e.target.value as T;
         // Convert back to number if the original option value was a number

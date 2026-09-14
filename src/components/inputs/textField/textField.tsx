@@ -107,6 +107,7 @@ function useTextField<T = string>(params?: TextFieldParams<T>): TextFieldModel<T
             const hasValidationError = !model.isValid();
             const hasExternalError = model.error;
             const showError = hasValidationError || hasExternalError;
+            const helperShown = showError || !!model.helperTextView;
             const errorMessage = hasValidationError ? model.getValidationError() : model.helperTextView;
 
             const className = `ueca-textfield ueca-textfield-${model.variant}${showError ? " ueca-textfield-error" : ""}${model.disabled ? " ueca-textfield-disabled" : ""}${model.fullWidth ? " ueca-textfield-fullwidth" : ""}`;
@@ -120,18 +121,21 @@ function useTextField<T = string>(params?: TextFieldParams<T>): TextFieldModel<T
                     } as React.CSSProperties}
                 >
                     {model.labelView && (
-                        <label className="textfield-label">
+                        <label htmlFor={_inputId()} className="textfield-label">
                             {model.labelView}
-                            {model.required && <span className="textfield-required"> *</span>}
+                            {model.required && <span className="textfield-required" aria-hidden="true"> *</span>}
                         </label>
                     )}
                     {model.multiline ? (
                         <textarea
+                            id={_inputId()}
                             className="textfield-input textfield-textarea"
                             value={model.value?.toString()}
                             placeholder={model.placeholder}
                             disabled={model.disabled}
                             required={model.required}
+                            aria-invalid={showError || undefined}
+                            aria-describedby={helperShown ? _helperId() : undefined}
                             rows={model.rows}
                             onChange={_handleChange}
                             onFocus={_handleFocus}
@@ -139,20 +143,23 @@ function useTextField<T = string>(params?: TextFieldParams<T>): TextFieldModel<T
                         />
                     ) : (
                         <input
+                            id={_inputId()}
                             className="textfield-input"
                             type={model.type}
                             value={model.value?.toString()}
                             placeholder={model.placeholder}
                             disabled={model.disabled}
                             required={model.required}
+                            aria-invalid={showError || undefined}
+                            aria-describedby={helperShown ? _helperId() : undefined}
                             autoComplete={model.autoComplete}
                             onChange={_handleChange}
                             onFocus={_handleFocus}
                             onBlur={_handleBlur}
                         />
                     )}
-                    {(showError || model.helperTextView) && (
-                        <div className={`textfield-helper-text${showError ? " textfield-helper-text-error" : ""}`}>
+                    {helperShown && (
+                        <div id={_helperId()} className={`textfield-helper-text${showError ? " textfield-helper-text-error" : ""}`}>
                             {errorMessage}
                         </div>
                     )}
@@ -165,6 +172,16 @@ function useTextField<T = string>(params?: TextFieldParams<T>): TextFieldModel<T
     return model;
 
     // Private methods
+
+    // Derived from the model's DOM id: the label's htmlFor and the input's aria-describedby point at these.
+    function _inputId(): string {
+        return `${model.htmlId()}-input`;
+    }
+
+    function _helperId(): string {
+        return `${model.htmlId()}-helper`;
+    }
+
     function _handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
         model.value = e.target.value as T;
         if (model.onChange) {
