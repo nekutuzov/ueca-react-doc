@@ -281,12 +281,22 @@ function useTabsContainer(params?: TabsContainerParams): TabsContainerModel {
         model.tabs?.map(t => { t.container = model; });
 
         if (model.__defaultTabId) {
-            const defaultTabId = model.__defaultTabId;
-            model.__defaultTabId = undefined; // Clear after use, so it used only once
-            model.selectedTab = model.getTab(defaultTabId);
+            // Config tabs are created by the first render, after init has already run this over an
+            // empty list, so the id waits until its tab exists — or until every configured tab does
+            // and it names none. Looked up at once, it was discarded, the first tab was selected, and
+            // a bound selectedTabId source was overwritten with it.
+            const defaultTab = model.getTab(model.__defaultTabId);
+            if (defaultTab || !_configTabsPending()) {
+                model.__defaultTabId = undefined; // Clear after use, so it used only once
+                model.selectedTab = defaultTab;
+            }
         }
 
-        if (model.selectedTabIndex === -1) {
+        // Fall back to the first tab when nothing is selected, or when the selected tab is no longer
+        // among the tabs. Tested against the list directly: selectedTabIndex is a binding that has not
+        // necessarily settled here, and read just after a start-up id that named no tab was used up, it
+        // still reported the tab an earlier pass had picked, so nothing was left selected.
+        if (!model.selectedTab || !model.tabs?.includes(model.selectedTab)) {
             model.selectedTab = model.tabs?.length ? model.tabs[0] : undefined;
         }
 
@@ -298,6 +308,11 @@ function useTabsContainer(params?: TabsContainerParams): TabsContainerModel {
 
         // Check overflow after tabs initialization
         setTimeout(() => model._checkOverflow(), 0);
+    }
+
+    // Whether configured tabs are still to be created by the render.
+    function _configTabsPending(): boolean {
+        return (model.tabsConfig?.length ?? 0) > (model.tabs?.length ?? 0);
     }
 }
 
