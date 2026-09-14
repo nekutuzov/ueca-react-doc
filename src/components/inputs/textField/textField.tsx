@@ -1,5 +1,5 @@
 import * as UECA from "ueca-react";
-import { EditBaseModel, EditBaseParams, EditBaseStruct, useEditBase } from "@components";
+import { EditBaseModel, EditBaseParams, EditBaseStruct, isEmptyValue, useEditBase } from "@components";
 import { Palette, resolvePaletteColor } from "@core";
 import "./textField.css";
 
@@ -58,13 +58,13 @@ function useTextField<T = string>(params?: TextFieldParams<T>): TextFieldModel<T
             onInternalValidate: async () => {
                 const fieldName = UECA.isString(model.labelView) ? model.labelView : "This field";
                 
-                // Required validation
-                if (model.required && (!model.value || model.value.toString().trim() === "")) {
+                // Required validation. A TextField<number> holding 0 shows "0", so 0 is not empty.
+                if (model.required && isEmptyValue(model.value)) {
                     return `${fieldName} is required`;
                 }
 
                 // Type-specific validation (only if value is not empty)
-                if (model.value && model.value.toString().trim() !== "") {
+                if (!isEmptyValue(model.value)) {
                     const valueStr = model.value.toString();
                     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                     const phoneRegex = /^[\d\s\-+()]+$/;

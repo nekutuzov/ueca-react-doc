@@ -1,5 +1,5 @@
 import * as UECA from "ueca-react";
-import { EditBaseModel, EditBaseParams, EditBaseStruct, useEditBase } from "@components";
+import { EditBaseModel, EditBaseParams, EditBaseStruct, isEmptyValue, useEditBase } from "@components";
 import { Palette, resolvePaletteColor } from "@core";
 import "./select.css";
 
@@ -56,7 +56,8 @@ function useSelect<T = string>(params?: SelectParams<T>): SelectModel<T> {
 
         events: {
             onInternalValidate: async () => {
-                if (model.required && !model.value) {
+                // Not `!model.value`: an option whose value is 0 is a choice, and shows as chosen.
+                if (model.required && isEmptyValue(model.value)) {
                     return `${UECA.isString(model.labelView) ? model.labelView : "This field"} cannot be empty`;
                 }
             },
