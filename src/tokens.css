@@ -96,6 +96,11 @@
     --hairline: 1px;
     --stroke-emphasis: 2px;
 
+    /* How far a focus ring paints OUTSIDE its control — the emphasis stroke and its 2px offset — and
+       so how much room a container that clips has to reserve, or the rings of the controls at its edge
+       are cut. Read by theme.css's .ueca-focus-bleed and the top bar's breadcrumb trail. */
+    --focus-bleed: calc(var(--stroke-emphasis) + 2px);
+
     /* ---- Elevation ---- */
     --shadow-color: 0 0 0;
     --shadow-1: 0 1px 2px rgb(var(--shadow-color) / 0.18);

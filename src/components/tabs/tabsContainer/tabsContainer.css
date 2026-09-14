@@ -135,6 +135,24 @@
     min-height: 40px;
 }
 
+/* The content panel scrolls, so it clips — and tab content starts flush against that edge, which cut
+   the focus ring off any control sitting there: a button at the top of the panel lost its ring on the
+   left, right and top. It therefore wears the shared `ueca-focus-bleed` class from theme.css; `flex`
+   and `overflow` come from the Col's own props.
+
+   Except where the panel meets its own strip, which the bleed would pull it under: content scrolled
+   there would show through the strip's edge, and a control scrolled under the strip would cover the
+   selected tab's marker and take the clicks on that edge of the tab. Nothing spaces the strip from the
+   panel, so on that side the panel is not pulled out at all: its first row sits the bleed below a
+   horizontal strip's rule, and its first column the bleed to the right of a vertical strip's divider. */
+.ueca-tabs-container.horizontal > .ueca-focus-bleed {
+    margin-top: 0;
+}
+
+.ueca-tabs-container.vertical > .ueca-focus-bleed {
+    margin-left: 0;
+}
+
 /* Content area */
 .ueca-tabs-content {
     flex: 1;

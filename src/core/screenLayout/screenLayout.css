@@ -25,10 +25,10 @@
     overflow: hidden;
     font-size: var(--text-sm);
     /* That clip runs flush along the first crumb's left edge and the last one's right, and cut the
-       side off a focused crumb's ring. Room inside it for the ring - its stroke and 2px offset -
-       pulled back out by the same margin, so the trail does not move. */
-    padding-inline: calc(var(--stroke-emphasis) + 2px);
-    margin-inline: calc(-1 * (var(--stroke-emphasis) + 2px));
+       side off a focused crumb's ring. Room inside it for the ring, pulled back out by the same
+       margin, so the trail does not move - see --focus-bleed. */
+    padding-inline: var(--focus-bleed);
+    margin-inline: calc(-1 * var(--focus-bleed));
 }
 
 /* The trail names the article, so it starts where the article's text starts. The offset goes on
