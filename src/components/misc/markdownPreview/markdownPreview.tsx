@@ -93,6 +93,7 @@ function useMarkdownPreview(params?: MarkdownPreviewParams): MarkdownPreviewMode
                 <MarkdownPreview
                     source={model.source}
                     skipHtml={model.skipHtml}
+                    remarkPlugins={model.skipHtml ? [remarkSkipHtml] : undefined}
                 />
             </Col>
         )
@@ -137,6 +138,26 @@ function useMarkdownPreview(params?: MarkdownPreviewParams): MarkdownPreviewMode
 
         return fileName ? docRouteMap[fileName] : undefined;
     }
+}
+
+// A parsed markdown node, as far as dropping raw HTML needs one: raw HTML is a node of type "html".
+type MarkdownNode = { type: string; children?: MarkdownNode[] };
+
+// Removes raw HTML from the parsed markdown before it becomes elements, keeping the text between
+// inline tags. skipHtml alone never took effect: @uiw/react-markdown-preview adds rehype-raw to its
+// plugins whatever skipHtml says, so every tag in the source rendered.
+function remarkSkipHtml() {
+    return (tree: MarkdownNode) => {
+        _dropHtml(tree);
+    };
+}
+
+function _dropHtml(node: MarkdownNode) {
+    if (!node.children) {
+        return;
+    }
+    node.children = node.children.filter((child) => child.type !== "html");
+    node.children.forEach(_dropHtml);
 }
 
 const MarkdownPreviewComponent = UECA.getFC(useMarkdownPreview);
