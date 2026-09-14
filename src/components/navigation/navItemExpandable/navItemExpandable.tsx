@@ -45,7 +45,13 @@ function useNavItemExpandable(params?: NavItemExpandableParams): NavItemExpandab
                         leftRight: model.mode === "icon-only" ? undefined : "small"
                     }}
                     cursor="pointer"
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={model.expanded}
+                    // With the label hidden, only the icon is left to name the group.
+                    aria-label={model.mode === "icon-only" ? model.text : undefined}
                     onClick={() => model.expanded = !model.expanded}
+                    onKeyDown={_onHeaderKeyDown}
                     sx={{
                         "--nav-item-hover": resolvePaletteColor("menu.hover"),
                         "--nav-item-active": resolvePaletteColor("menu.active")
@@ -104,6 +110,16 @@ function useNavItemExpandable(params?: NavItemExpandableParams): NavItemExpandab
 
     const model = useUIBase(struct, params);
     return model;
+
+    // Private methods
+    function _onHeaderKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+        if (e.key !== "Enter" && e.key !== " ") {
+            return;
+        }
+        // Space would otherwise scroll the menu.
+        e.preventDefault();
+        model.expanded = !model.expanded;
+    }
 }
 
 const NavItemExpandable = UECA.getFC(useNavItemExpandable);

@@ -52,7 +52,14 @@ type BlockProps = {
     onClick?: React.MouseEventHandler<HTMLDivElement>;
     onMouseEnter?: React.MouseEventHandler<HTMLDivElement>;
     onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
-};
+    // A primitive acting as a control (a menu group's disclosure heading) has to hear its keys and
+    // take a tab stop.
+    onKeyDown?: React.KeyboardEventHandler<HTMLDivElement>;
+    tabIndex?: number;
+    // ARIA role. A div is semantically nothing, so anything acting as a button, list or dialog has to
+    // say so for assistive technology to make sense of it.
+    role?: string;
+} & React.AriaAttributes; // …and the states and names that go with a role: aria-expanded, aria-label.
 
 type FlexProps = BlockProps & {
     reverseItems?: boolean;
@@ -113,6 +120,10 @@ function Block(props: BlockProps): UECA.ReactElement {
             onClick={props?.onClick}
             onMouseEnter={props?.onMouseEnter}
             onMouseLeave={props?.onMouseLeave}
+            onKeyDown={props?.onKeyDown}
+            tabIndex={props?.tabIndex}
+            role={props?.role}
+            {...ariaAttributes(props)}
         >
             {props?.children}
         </div>
@@ -178,6 +189,10 @@ function Row(props: RowProps): UECA.ReactElement {
             onClick={props?.onClick}
             onMouseEnter={props?.onMouseEnter}
             onMouseLeave={props?.onMouseLeave}
+            onKeyDown={props?.onKeyDown}
+            tabIndex={props?.tabIndex}
+            role={props?.role}
+            {...ariaAttributes(props)}
         >
             {children}
         </div>
@@ -246,6 +261,10 @@ function Col(props: ColProps): UECA.ReactElement {
             onClick={props?.onClick}
             onMouseEnter={props?.onMouseEnter}
             onMouseLeave={props?.onMouseLeave}
+            onKeyDown={props?.onKeyDown}
+            tabIndex={props?.tabIndex}
+            role={props?.role}
+            {...ariaAttributes(props)}
         >
             {children}
         </div>
@@ -326,6 +345,18 @@ const colReverseVerticalAlignMap = {
     top: "flex-end",
     bottom: "flex-start",
 } as const;
+
+// The aria-* attributes among a primitive's props, to spread onto its element. Picked out by name,
+// so no other prop ever reaches the DOM.
+function ariaAttributes(props?: React.AriaAttributes): React.AriaAttributes {
+    const aria: Record<string, unknown> = {};
+    for (const key in props) {
+        if (key.startsWith("aria-")) {
+            aria[key] = props[key as keyof React.AriaAttributes];
+        }
+    }
+    return aria;
+}
 
 // Function to map padding prop to CSS style properties
 function paddingStyleMap(padding?: Padding): React.CSSProperties {
