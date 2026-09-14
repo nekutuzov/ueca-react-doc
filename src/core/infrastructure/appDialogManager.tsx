@@ -6,6 +6,8 @@ import { DetailedError } from "@core";
 type AppDialogManagerStruct = UIBaseStruct<{
     props: {
         _openDialogs: UECA.ReactElement[];
+        // Counts the dialogs opened, for each one's React key.
+        __dialogCount: number;
     }
 }>;
 
@@ -18,7 +20,8 @@ function useAppDialogManager(params?: AppDialogManagerParams): AppDialogManagerM
     const struct: AppDialogManagerStruct = {
         props: {
             id: useAppDialogManager.name,
-            _openDialogs: []
+            _openDialogs: [],
+            __dialogCount: 0
         },
 
         messages: {
@@ -50,8 +53,15 @@ function useAppDialogManager(params?: AppDialogManagerParams): AppDialogManagerM
 
         const severity = _getSeverity(_kind);
 
+        // Every dialog shows as "activeDialog", so the key and cacheable={false} are what give each
+        // one a model of its own. Sharing one, a nested dialog took over the model of the dialog
+        // beneath it, whose `init` — the OK button's verb and colour — never ran again, and the
+        // nested dialog wore the other's button. Uncached, a dialog brought back when the one above
+        // it closes starts from its own parameters again.
         const newDialog = (
             <AlertDialog
+                key={++model.__dialogCount}
+                cacheable={false}
                 id={"activeDialog"}
                 titleView={title}
                 contentView={message}
