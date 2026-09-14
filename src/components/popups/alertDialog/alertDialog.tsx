@@ -110,6 +110,12 @@ function useAlertDialog(params?: AlertDialogParams): AlertDialogModel {
             }),
         },
 
+        // Removed while still open, the dialog never closes, and leaving modal mode happened only on
+        // close: the entry stayed on the modal stack for the session. Leaving is idempotent.
+        unmount: () => {
+            model.leaveModalMode();
+        },
+
         View: () => <>
             <model.dialog.View />
             < model.detailsDrawer.View />
