@@ -12,6 +12,10 @@ type DrawerStruct = UIBaseStruct<{
         anchor: "left" | "top" | "right" | "bottom";
         variant: "permanent" | "persistent" | "temporary";
         width?: number;
+        // Where focus was when a modal drawer opened — the trigger, as a rule — to give back on close.
+        __returnFocus: HTMLElement;
+        // Set on opening a modal drawer, cleared by the first draw that puts focus into the panel.
+        __focusPending: boolean;
     };
 
     events: {
@@ -34,13 +38,17 @@ function useDrawer(params?: DrawerParams): DrawerModel {
             anchor: "left",
             variant: "temporary",
             width: undefined,
+            __returnFocus: undefined,
+            __focusPending: false
         },
 
         events: {
             onChangeOpen: (v) => {
                 if (v) {
+                    _focusOnDraw();
                     asyncSafe(() => model.onOpen?.(model));
                 } else {
+                    _returnFocus();
                     asyncSafe(() => model.onClose?.(model));
                 }
             }
@@ -48,7 +56,30 @@ function useDrawer(params?: DrawerParams): DrawerModel {
 
         constr: () => {
             if (model.open) {
+                _focusOnDraw();
                 asyncSafe(() => model.onOpen?.(model));
+            }
+        },
+
+        // A drawer torn down while still open would otherwise leave focus on the page it no longer covers.
+        unmount: () => {
+            if (model.open) {
+                _returnFocus();
+            }
+        },
+
+        // A modal drawer takes focus once its panel is on screen, as Dialog does: aria-modal tells a
+        // screen reader to stay inside it, so focus must not be left on the page behind the backdrop.
+        draw: () => {
+            if (!model.__focusPending || !model.open || !_isModal()) {
+                return;
+            }
+            const panel = document.getElementById(model.htmlId());
+            if (panel) {
+                model.__focusPending = false;
+                if (!panel.contains(document.activeElement)) {
+                    panel.focus();
+                }
             }
         },
 
@@ -66,6 +97,12 @@ function useDrawer(params?: DrawerParams): DrawerModel {
                     <div
                         id={model.htmlId()}
                         className={`ueca-drawer ${anchorClass} ${openClass}`}
+                        // Only the temporary variant is modal — it alone has a backdrop. Permanent and
+                        // persistent drawers sit beside the page and claim nothing.
+                        role={_isModal() ? "dialog" : undefined}
+                        aria-modal={_isModal() ? "true" : undefined}
+                        aria-labelledby={_isModal() && model.titleView ? _titleId() : undefined}
+                        tabIndex={_isModal() ? -1 : undefined}
                         style={{
                             ...(model.width && !isVertical ? { width: `${model.width}px` } : {}),
                             ...(isVertical ? { height: `${model.width || 600}px`, maxHeight: "60vh" } : {})
@@ -73,7 +110,7 @@ function useDrawer(params?: DrawerParams): DrawerModel {
                     >
                         <Col fill overflow="hidden">
                             <Row verticalAlign="center" horizontalAlign="spaceBetween" className="drawer-title">
-                                <div>{model.titleView}</div>
+                                <div id={_titleId()}>{model.titleView}</div>
                                 <Block render={model.variant !== "permanent"}>
                                     <CloseIconButton onClick={_close} />
                                 </Block>
@@ -101,6 +138,36 @@ function useDrawer(params?: DrawerParams): DrawerModel {
     // Private methods
     function _close() {
         model.open = false;
+    }
+
+    function _isModal(): boolean {
+        return model.variant === "temporary";
+    }
+
+    function _titleId(): string {
+        return `${model.htmlId()}-title`;
+    }
+
+    function _focusOnDraw() {
+        if (!_isModal()) {
+            return;
+        }
+        model.__returnFocus = document.activeElement as HTMLElement;
+        model.__focusPending = true;
+    }
+
+    // Only while focus is still the drawer's to give back: inside the panel, or dropped to the page
+    // because the panel went away. Focus the user has moved elsewhere stays where they put it.
+    function _returnFocus() {
+        const target = model.__returnFocus;
+        model.__returnFocus = undefined;
+        model.__focusPending = false;
+        const active = document.activeElement;
+        const panel = document.getElementById(model.htmlId());
+        const focusIsOurs = !active || active === document.body || !!panel?.contains(active);
+        if (focusIsOurs && target?.isConnected && target !== document.body) {
+            target.focus();
+        }
     }
 }
 

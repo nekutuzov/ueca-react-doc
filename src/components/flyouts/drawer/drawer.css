@@ -32,6 +32,12 @@
     z-index: 1300;
 }
 
+/* A modal drawer's panel takes focus from code when it opens, so assistive technology starts inside
+   it. It is a container, not a control, so it draws no ring — the panel itself is what shows. */
+.ueca-drawer:focus-visible {
+    outline: none;
+}
+
 /* Anchor positions */
 .drawer-anchor-left {
     top: 0;
