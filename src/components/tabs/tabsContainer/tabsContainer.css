@@ -153,6 +153,12 @@
     margin-left: 0;
 }
 
+/* Same clipping as the tabs themselves, so the same inset ring. */
+.ueca-tabs-scroll-button:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 var(--stroke-emphasis) var(--focus-ring);
+}
+
 /* Content area */
 .ueca-tabs-content {
     flex: 1;

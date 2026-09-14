@@ -106,3 +106,11 @@
 .ueca-tabs-vertical .ueca-tab.selected.invalid {
     border-right-color: var(--error);
 }
+
+/* Focus. INSET rather than an outline: a tab sits inside .ueca-tabs-scroller and .ueca-tabs-wrapper,
+   both overflow: hidden, which cut the app-wide outward ring off every tab — top and bottom in a
+   horizontal strip, both sides in a vertical one — leaving two stray lines that read as a border. */
+.ueca-tab:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 var(--stroke-emphasis) var(--focus-ring);
+}
