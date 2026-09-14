@@ -87,6 +87,9 @@ something synchronously available (here, `window.location`) rather than from an 
 > **This is a deliberate divergence from MLWebApp**, whose `AppBrowsingHistory` calls
 > `syncWithBrowser()` from `init`, *after* awaiting `App.GetInfo`. Porting that here reintroduces
 > the deep-link bug above. Keep `constr`. Everything else in that module tracks MLWebApp.
+> `init` syncs again only when the popstate listener is gone — a model brought back from the model
+> cache, which `constr` does not run for — so first activation still happens in `constr`. Routes
+> resolve through `core/misc/routeURL.ts`, shared verbatim with MLWebApp.
 
 ## Non-Negotiable Rules
 
@@ -195,6 +198,10 @@ A CSS class can never override those. So:
 - an element that must hide at a breakpoint (`display: none`) cannot be a `Col` — the docs TOC is a
   plain `<aside>` for exactly this reason.
 
+They do forward `role`, `tabIndex`, `onKeyDown` and any `aria-*` prop to their `<div>`, so a
+primitive can act as a control without a raw `<div>` — the menu group's heading is a disclosure
+button that way.
+
 Flex children also need `min-width: 0` / `min-height: 0` to shrink; without them a wide code block
 widens the whole page instead of scrolling inside its own `pre` — and the sidebar menu grows past
 the rail instead of showing a scrollbar.
@@ -236,7 +243,9 @@ To give any element a tooltip, spread the base-hook helper:
   on `:focus-visible`, or returning from another tab would pop a tooltip under no pointer.
 - `token` is the trigger's `htmlId()`. A `Hide` naming anyone but the trigger currently showing is
   ignored, which is what stops a fast sweep across the top bar from closing the bubble the element
-  now under the pointer just opened.
+  now under the pointer just opened. A model that spreads `tooltipProps` onto several elements names
+  each with `{ trigger: "…" }` (token `htmlId()#name`); sharing one token, a late leave from one
+  would close the bubble its neighbour had just opened.
 - Placement is automatic: `positionOverlay` in `core/misc/overlayPosition.ts` (a pure function of
   rectangles — no DOM) flips to whichever side has room and slides the bubble back inside the
   viewport, and the arrow offset is recomputed so it still points at the trigger.
@@ -253,7 +262,8 @@ To give any element a tooltip, spread the base-hook helper:
 
 **Every link to another site opens in a new tab.** Three routes, all already wired:
 
-- UECA components — `model.openNewTab({ path })`, or `newTab: true` on a `NavLink`.
+- UECA components — `model.openNewTab({ path })`, or `newTab: true` on a `NavLink`. A `GoToRoute`
+  or `SetRoute` to another origin opens a new tab as well, and leaves the screen on show.
 - Markdown articles — `markdownPreview`'s `draw` stamps `target="_blank"` + `rel="noopener
   noreferrer"` onto any anchor whose resolved `a.protocol` is http(s) and whose `a.hostname` differs
   from ours. Reading the resolved properties rather than parsing the href is what leaves relative
@@ -273,7 +283,7 @@ regular expression and a `#id` glued onto it matches nothing. Everything else fo
 
 | | |
 | --- | --- |
-| `AppBrowsingHistory` | owns the fragment. `_syncCurrentPath` reads it into `__activeSection`, `_routeToURL` writes it back, and `OnNavigate` reports it with the path |
+| `AppBrowsingHistory` | owns the fragment. `_syncCurrentPath` reads it into `__activeSection`, `routeToURL` writes it back, and `OnNavigate` reports it with the path |
 | `AppRouter` | carries it through `_syncCurrentRoute` (cold open) and `_onNavigateBrowsingHistory` (Back/Forward), and broadcasts it on `AfterRouteChange` |
 | `DocsScreen` | applies it — scrolls to the heading, or to the top of the article when the route names no section |
 | `DocsToc`, `markdownPreview` | **patch the address** (`model.setRouteSection(id)`); neither scrolls anything itself |
