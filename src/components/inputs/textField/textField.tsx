@@ -130,7 +130,10 @@ function useTextField<T = string>(params?: TextFieldParams<T>): TextFieldModel<T
                         <textarea
                             id={_inputId()}
                             className="textfield-input textfield-textarea"
-                            value={model.value?.toString()}
+                            // Never undefined: value={undefined} makes React treat the field as
+                            // uncontrolled, and an uncontrolled field keeps the text it last
+                            // showed when its value is unset again (a reloaded record, a null).
+                            value={model.value?.toString() ?? ""}
                             placeholder={model.placeholder}
                             disabled={model.disabled}
                             required={model.required}
@@ -146,7 +149,8 @@ function useTextField<T = string>(params?: TextFieldParams<T>): TextFieldModel<T
                             id={_inputId()}
                             className="textfield-input"
                             type={model.type}
-                            value={model.value?.toString()}
+                            // Never undefined, for the same reason as the textarea's.
+                            value={model.value?.toString() ?? ""}
                             placeholder={model.placeholder}
                             disabled={model.disabled}
                             required={model.required}
