@@ -19,7 +19,10 @@
     border-bottom: 1px solid var(--border);
 }
 
-.ueca-tabs-vertical .ueca-tabs-header {
+/* The header carries ueca-tabs-vertical itself, so this is a compound selector. Written as a descendant
+   one (`.ueca-tabs-vertical .ueca-tabs-header`) it asked for an ancestor that does not exist and never
+   matched: a vertical strip kept the horizontal rule under it and had no divider beside the panel. */
+.ueca-tabs-header.ueca-tabs-vertical {
     flex-direction: column;
     border-bottom: none;
     border-right: 1px solid var(--border);
