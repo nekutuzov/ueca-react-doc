@@ -50,6 +50,8 @@ function useTabsScreen(params?: TabsScreenParams): TabsScreenModel {
             tabsContainer: useTabsContainer()
         },
 
+        // Every CRUDScreenMethods member the model's type promises. goToParentScreen was missing, so a
+        // call that type-checked threw "is not a function".
         methods: {
             getScreenState: () => model.crudScreen.getScreenState(),
             setScreenState: (state) => model.crudScreen.setScreenState(state),
@@ -58,7 +60,8 @@ function useTabsScreen(params?: TabsScreenParams): TabsScreenModel {
             cancel: async () => await model.crudScreen.cancel(),
             delete: async () => await model.crudScreen.delete(),
             validate: async (showDialog) => await model.crudScreen.validate(showDialog),
-            resetValidationErrors: () => model.crudScreen.resetValidationErrors()
+            resetValidationErrors: () => model.crudScreen.resetValidationErrors(),
+            goToParentScreen: async (redirect) => await model.crudScreen.goToParentScreen(redirect)
         },
 
         View: () =>
