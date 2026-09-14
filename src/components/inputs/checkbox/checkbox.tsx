@@ -15,6 +15,7 @@ type CheckboxStruct = EditBaseStruct<{
         color: Palette;
         size: CheckboxSize;
         helperTextView: React.ReactNode;
+        __inputRef: React.RefObject<HTMLInputElement>;
     };
 
     events: {
@@ -36,7 +37,8 @@ function useCheckbox(params?: CheckboxParams): CheckboxModel {
             required: false,
             color: "primary.main",
             size: "medium",
-            helperTextView: undefined
+            helperTextView: undefined,
+            __inputRef: { current: null }
         },
 
         events: {
@@ -53,6 +55,15 @@ function useCheckbox(params?: CheckboxParams): CheckboxModel {
             onChangeChecked: () => model.resetValidationErrors(),
         },
 
+        // The mixed state is a DOM property with no attribute, so it is set here, after each draw.
+        // Only the glyph used to change: a screen reader announced a mixed box as plain "not checked".
+        draw: () => {
+            const input = model.__inputRef.current;
+            if (input) {
+                input.indeterminate = _showsMixed();
+            }
+        },
+
         View: () => {
             const colorClass = resolvePaletteColor(model.color);
             const hasValidationError = !model.isValid();
@@ -67,6 +78,7 @@ function useCheckbox(params?: CheckboxParams): CheckboxModel {
                         } as React.CSSProperties}
                     >
                         <input
+                            ref={model.__inputRef}
                             type="checkbox"
                             className="checkbox-input"
                             // Always a boolean: checked={undefined} makes React treat the box as
@@ -82,7 +94,7 @@ function useCheckbox(params?: CheckboxParams): CheckboxModel {
                                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                                 </svg>
                             )}
-                            {model.indeterminate && !model.checked && (
+                            {_showsMixed() && (
                                 <svg className="checkbox-icon checkbox-icon-indeterminate" viewBox="0 0 24 24">
                                     <path d="M19 13H5v-2h14v2z" />
                                 </svg>
@@ -109,6 +121,11 @@ function useCheckbox(params?: CheckboxParams): CheckboxModel {
         if (model.onChange) {
             model.onChange(model.checked, model);
         }
+    }
+
+    // A checked box shows its check, whatever `indeterminate` says.
+    function _showsMixed(): boolean {
+        return !!model.indeterminate && !model.checked;
     }
 }
 
