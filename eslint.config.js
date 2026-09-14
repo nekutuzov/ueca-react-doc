@@ -4,6 +4,16 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
+// A fill Col wearing theme.css's ueca-focus-bleed takes width={"auto"} - the note beside the utility
+// says why. Each attribute is a direct child (`>`), so a Col passed in another's attribute lends it
+// nothing; and as `:has(> A B)` never matches, the literal is looked for with a nested :has.
+const fillColHeldToFullWidth = [
+  'JSXOpeningElement[name.name="Col"]',
+  ':has(> JSXAttribute[name.name="className"]:has(Literal[value=/(^|\\s)ueca-focus-bleed(\\s|$)/]))',
+  ':has(> JSXAttribute[name.name="fill"])',
+  ':not(:has(> JSXAttribute[name.name="width"]:has(Literal[value="auto"])))',
+].join('')
+
 export default tseslint.config(
   {
     ignores: [
@@ -42,5 +52,14 @@ export default tseslint.config(
       'react-refresh/only-export-components': 'off',
     },
 
+  },
+  {
+    files: ['**/*.tsx'],
+    rules: {
+      'no-restricted-syntax': ['error', {
+        selector: fillColHeldToFullWidth,
+        message: 'A fill Col wearing ueca-focus-bleed takes width={"auto"}: against the width: 100% that fill writes, the bleed margins shift it left and its content loses twice the bleed on the right. See theme.css.',
+      }],
+    },
   },
 )

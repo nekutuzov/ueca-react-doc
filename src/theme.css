@@ -59,6 +59,11 @@ body {
    PADDING box, not the content box, so the pulled-out edges land inside the parent's own padding
    and still paint.
 
+   Only if the box's width is free to follow its margins. Col's `fill` writes `width: 100%` inline,
+   which holds the box to its parent, so the margins shift it left instead of widening it and its
+   content loses twice the bleed on the right — as the tab panel would without its `width="auto"`.
+   A `fill` Col wearing this class takes `width={"auto"}`; eslint.config.js checks.
+
    Wear it on the CLIPPING CONTAINER, never on the control. Where a container clips deliberately —
    a `text-overflow: ellipsis` cell, fixed-height chrome — there is nothing to reserve and the
    control uses an inset ring instead.
