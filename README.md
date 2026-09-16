@@ -37,6 +37,13 @@ Install dependencies:
 npm install
 ```
 
+That also installs the ueca-react agent skills into .claude/skills/ via the postinstall. To refresh
+them without a full install:
+
+```bash
+npx ueca-react-skills
+```
+
 Start development server:
 
 ```bash
@@ -112,7 +119,14 @@ When adding or changing docs entries:
 ## Related Workspace Instructions
 
 Project-specific assistant guidance is in CLAUDE.md. It defers to the agent skills that ship with
-the library, which npm install copies from node_modules/ueca-react/skills into .claude/skills/.
+ueca-react, which npm install puts in .claude/skills/ by running `npx ueca-react-skills --auto`
+(our postinstall, not the library's - ueca-react ships no install hook of its own).
+
+Those skills are generated and gitignored: they come from the package, so a fresh clone gets them
+from npm install rather than from git. Run `npx ueca-react-skills` to refresh them by hand.
+
+How to maintain this project - upgrading ueca-react, deploying, what to check and in what order -
+is itself a skill, in .claude/skills/ueca-doc-maintenance/. That one IS committed.
 
 ## License
 

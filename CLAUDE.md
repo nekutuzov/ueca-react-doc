@@ -26,8 +26,21 @@ application.
 - Invoke **`ueca-app-architecture`** for anything bigger than one component: the app shell, routing,
   services, "where does this go", or converting React code to UECA.
 
+And one skill of our own, in the repo rather than from the package:
+
+- Invoke **`ueca-doc-maintenance`** before upgrading `ueca-react`, refreshing the skills, deploying,
+  adding a documentation article, or editing `README.md` / `package.json` / `.gitignore` /
+  `deploy.ps1`. It carries the upgrade checklist and the traps this project has actually hit. It is
+  a living document — when a release teaches you something, write it back there in the same turn.
+
 Where this file and a skill disagree about the **framework**, the skill wins. Where they disagree
 about **this app's conventions** (base components, docs routing, markdown viewer), this file wins.
+
+**Anything this project uses is described in two places: `README.md` for people and this file for
+agents. Change a mechanism and change both.** That is not a style note — the 3.0.3 skills install
+changed and only this file was updated, leaving the README advertising the copy the library had
+replaced. `CLAUDE.md` is loaded into context automatically and the README is not, so the README is
+the one that rots. After any change to setup, build, install or deploy, grep both.
 
 `.claude/skills/ueca-app-development/` and `.claude/skills/ueca-app-architecture/` are generated —
 gitignored by name, and reinstalled on every `npm install` by our own `postinstall`,
@@ -428,7 +441,8 @@ an upgrade that moves or renames a shipped file breaks the **build**, not the ru
 | `npm run build` | `tsc -b && vite build` |
 | `npm run lint` | ESLint — currently clean, keep it that way |
 | `npm run deploy` | Builds and stages `dist` into `../ueca-react-doc-deploy` (see below) |
-| `npm install` | installs deps **and** refreshes `.claude/skills/` via `postinstall` |
+| `npm install` | installs deps **and** refreshes `.claude/skills/` — our `postinstall` runs `npx ueca-react-skills --auto` |
+| `npx ueca-react-skills` | refresh the library skills on their own, without a full install |
 
 If build/lint errors are unrelated to the changed scope, do not make broad unrelated refactors.
 

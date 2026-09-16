@@ -28,4 +28,6 @@ dist-ssr
 # Agent skills copied out of the ueca-react package by "ueca-react-skills" (our postinstall).
 # Generated - do not edit in place; re-run "npm install" after upgrading ueca-react.
 # The whole folder, so a skill directory added by a future release cannot slip in untracked.
-.claude/skills/
+# Our own project skill is the one exception - it is not generated and belongs in the repo.
+.claude/skills/*
+!.claude/skills/ueca-doc-maintenance/
