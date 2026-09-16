@@ -15,7 +15,7 @@ Primary source:
 
 ## Start here: the library skills
 
-The library ships its own agent skills, copied into `.claude/skills/` by the `postinstall` script.
+The library ships its own agent skills, installed into `.claude/skills/` by `npx ueca-react-skills`.
 **They are the authority on the framework itself** — this file only covers what is specific to *this*
 application.
 
@@ -29,8 +29,20 @@ application.
 Where this file and a skill disagree about the **framework**, the skill wins. Where they disagree
 about **this app's conventions** (base components, docs routing, markdown viewer), this file wins.
 
-`.claude/skills/` is generated — it is gitignored and re-copied on every `npm install`. Never edit it
-in place; after upgrading `ueca-react`, run `npm install` to refresh it.
+`.claude/skills/ueca-app-development/` and `.claude/skills/ueca-app-architecture/` are generated —
+gitignored by name, and reinstalled on every `npm install` by our own `postinstall`,
+`npx ueca-react-skills --auto` (`--auto` only means "never fail the install"). Never edit them in
+place; after upgrading `ueca-react`, run `npm install` to refresh them.
+
+The command **replaces** each of those two directories rather than merging into it, which is the
+point: the hand-rolled `cpSync` it superseded left files behind that a release had dropped, and in
+3.0.3 it silently failed to pick up the two new ones. Anything else under `.claude/skills/` is ours
+and is never read, moved or deleted by it.
+
+**The library skills are never committed** — `.gitignore` covers all of `.claude/skills/`, the whole
+folder rather than the two directories by name, so a skill a future release adds cannot arrive
+untracked and get swept into a commit. They come from the package; `npm install` puts them there.
+The library itself ships **no** `postinstall` — installing `ueca-react` runs nothing.
 
 ### Library reference docs
 
@@ -38,8 +50,19 @@ Shipped inside the package (paths are real — verify before citing):
 
 - Guide index: `node_modules/ueca-react/docs/raw/index.md`
 - Articles: `node_modules/ueca-react/docs/raw/original/*.md` — the 21 entries this app serves
+- Standalone trace viewer: `node_modules/ueca-react/docs/tools/trace-viewer.html` — a single file,
+  openable from disk; drop a trace on it, or name one in its address
+  (`#trace=<url>&view=<name>`)
 - Changelog (read this before assuming any v2 behaviour still holds):
   `node_modules/ueca-react/CHANGELOG.md`
+
+Inside the skills, two references worth knowing before writing anything:
+
+- `ueca-app-architecture/reference/reference-apps.md` — indexes the three published applications by
+  problem. **demo2 is the one to read**: ~50 components on plain HTML/CSS/SVG with no UI library,
+  which is this project's own constraint. Check there before building a control from scratch.
+- `ueca-app-development/reference/testing.md` — the mount-and-settle harness. A UECA component draws
+  nothing on its first render, so a test has to await the mount.
 
 ## v3 rules that bite
 
@@ -69,6 +92,20 @@ changelog and in the skill's pitfalls reference; these are the ones this codebas
   cached model remounts. JSX props are standing declarations and *are* re-applied every render.
 - **`React.StrictMode` is supported** as of v3. This app still does not enable it (see
   `appStart.tsx`) — it buys a UECA app nothing.
+
+### Declaration order
+
+3.0.3 settled one order across the guide, the code template, the shipped skills and `index.d.ts`:
+
+```
+props → children → methods → events → messages →
+constr → init → draw → mount → erase → unmount → deinit → View
+```
+
+The hooks are in the order they run. **The runtime reads sections by name, so this is presentation,
+not behaviour** — nothing breaks in a struct that departs from it. Write new components this way;
+it is the shape an agent copies, and `homeHero.tsx` carries it as an annotated spine on purpose.
+Some older structs here still differ; that is cosmetic and not worth a diff on its own.
 
 ## Startup ordering
 
@@ -120,7 +157,7 @@ something synchronously available (here, `window.location`) rather than from an 
     ("On this page", parsed from the markdown source) and `DocsPager` (prev/next, ordered by
     `DOC_ORDER`).
 
-## Current Implementation Snapshot (September 2026, ueca-react 3.0.1)
+## Current Implementation Snapshot (September 2026, ueca-react 3.0.3)
 
 - `src/screens/index.ts` exports only:
   - `home/homeScreen`
@@ -134,6 +171,10 @@ something synchronously available (here, `window.location`) rather than from an 
   - Header: logo link, `UECA-React` wordmark, `3.0` version chip
   - Collapses itself below `NARROW_VIEWPORT` (860px) via a `mount` resize listener, and only on
     the crossing — so a deliberate toggle survives a resize on one side of the breakpoint
+- Tracing this app is cheap as of 3.0.3: an inbound `bind` record is written only when the value
+  actually **moves**. The menu binding 21 items to the current route used to write a `false → false`
+  record per item on every click. A TOC click traces 11 records now, not 33 — so a capture is worth
+  reading rather than scrolling past.
 - `src/core/infrastructure/appUI.tsx` mounts `<UECA.TraceViewerButton />`. It is a lazily-loaded
   chunk, so a closed viewer costs the bundle nothing. **Keep it** — it is there on purpose.
 - Menu items carry a chapter `number` (`01`–`21`) rendered in the NavItem icon slot, so the
@@ -267,7 +308,10 @@ To give any element a tooltip, spread the base-hook helper:
 - Markdown articles — `markdownPreview`'s `draw` stamps `target="_blank"` + `rel="noopener
   noreferrer"` onto any anchor whose resolved `a.protocol` is http(s) and whose `a.hostname` differs
   from ours. Reading the resolved properties rather than parsing the href is what leaves relative
-  article links, in-page fragments and `mailto:` alone.
+  article links, in-page fragments and `mailto:` alone. An anchor that already says
+  `target="_blank"` is left as the author wrote it — the 3.0.3 Tracing guide ships raw HTML links
+  into the trace viewer carrying `rel="noopener"`, and `noopener` alone is what closes the
+  reverse-tabnabbing hole; only the referrer would have been hidden as well.
 - `AppBrowsingHistory.open(route, true)` passes `noopener,noreferrer` to `window.open` — unlike
   `<a target="_blank">`, `window.open` does not imply it, and without it the opened page can
   navigate this one.

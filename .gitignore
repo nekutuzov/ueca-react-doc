@@ -25,6 +25,7 @@ dist-ssr
 *.sln
 *.sw?
 
-# Agent skills copied from node_modules/ueca-react/skills by the postinstall script.
+# Agent skills copied out of the ueca-react package by "ueca-react-skills" (our postinstall).
 # Generated - do not edit in place; re-run "npm install" after upgrading ueca-react.
+# The whole folder, so a skill directory added by a future release cannot slip in untracked.
 .claude/skills/
