@@ -40,13 +40,6 @@ function useAppSideBar(params?: AppSideBarParams): AppSideBarModel {
             __onResize: undefined
         },
 
-        events: {
-            onChangeCollapsed: async (collapsed: boolean) => {
-                // Post a broadcast message to notify side bar state change
-                await model.bus.broadcast("", "App.SideBarStateChanged", { collapsed });
-            }
-        },
-
         children: {
             menu: useAppMenu({
                 iconsOnly: () => model.collapsed
@@ -71,6 +64,13 @@ function useAppSideBar(params?: AppSideBarParams): AppSideBarModel {
         methods: {
             toggleCollapse: () => {
                 model.collapsed = !model.collapsed;
+            }
+        },
+
+        events: {
+            onChangeCollapsed: async (collapsed: boolean) => {
+                // Post a broadcast message to notify side bar state change
+                await model.bus.broadcast("", "App.SideBarStateChanged", { collapsed });
             }
         },
 
@@ -139,7 +139,7 @@ function useAppSideBar(params?: AppSideBarParams): AppSideBarModel {
                     </Col>
                 </Col>
             );
-        }
+        },
     }
 
     const model = useUIBase(struct, params);

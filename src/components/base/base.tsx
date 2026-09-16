@@ -81,15 +81,6 @@ function useBase<T extends BasePartialStruct>(extStruct: T, params?: BaseParams<
             __tooltipToken: undefined
         },
 
-        // A trigger can disappear while its tooltip is open — the sidebar collapses, a screen
-        // switches — and mouseleave never fires, which would strand the bubble on screen.
-        // hideTooltip carries the token this component opened with, so it can only close its own.
-        deinit: async () => {
-            if (model.__tooltipToken) {
-                await model.hideTooltip();
-            }
-        },
-
         methods: {
             // Shorthand Methods
 
@@ -137,7 +128,16 @@ function useBase<T extends BasePartialStruct>(extStruct: T, params?: BaseParams<
             hideTooltip: async (trigger) => {
                 await _hideTooltip(trigger === undefined ? (model.__tooltipToken ?? model.htmlId()) : _tooltipToken(trigger));
             },
-        }
+        },
+
+        // A trigger can disappear while its tooltip is open — the sidebar collapses, a screen
+        // switches — and mouseleave never fires, which would strand the bubble on screen.
+        // hideTooltip carries the token this component opened with, so it can only close its own.
+        deinit: async () => {
+            if (model.__tooltipToken) {
+                await model.hideTooltip();
+            }
+        },
     }
 
     const model = UECA.useExtendedComponent(struct, extStruct, params);

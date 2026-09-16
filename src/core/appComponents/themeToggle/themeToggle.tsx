@@ -40,15 +40,15 @@ function useThemeToggle(params?: ThemeToggleParams): ThemeToggleModel {
             })
         },
 
-        messages: {
-            "App.Theme.Changed": async (p) => {
-                model.mode = p.mode;
-            }
-        },
-
         methods: {
             toggle: async () => {
                 await model.bus.unicast("App.Theme.ToggleTheme");
+            }
+        },
+
+        messages: {
+            "App.Theme.Changed": async (p) => {
+                model.mode = p.mode;
             }
         },
 
@@ -59,7 +59,7 @@ function useThemeToggle(params?: ThemeToggleParams): ThemeToggleModel {
         View: () =>
             <div id={model.htmlId()} className="ueca-theme-toggle">
                 <model.button.View />
-            </div>
+            </div>,
     };
 
     const model = useUIBase(struct, params);

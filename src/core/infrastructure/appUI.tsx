@@ -34,14 +34,14 @@ function useAppUI(params?: AppUIParams): AppUIModel {
             tooltipManager: useAppTooltipManager()
         },
 
+        methods: {
+            appView: () => <AppRouter id={"router"} />
+        },
+
         messages: {
             "App.UnhandledException": async (error) => {
                 _processUnhandledException(error, true);
             }            
-        },
-
-        methods: {
-            appView: () => <AppRouter id={"router"} />
         },
 
         View: () =>
@@ -57,7 +57,7 @@ function useAppUI(params?: AppUIParams): AppUIModel {
                     <model.tooltipManager.View />
                 </Col>
                 <UECA.TraceViewerButton />
-            </ErrorFallback>
+            </ErrorFallback>,
     };
 
     const model = useUIBase(struct, params);

@@ -28,15 +28,6 @@ function useAppThemeManager(params?: AppThemeManagerParams): AppThemeManagerMode
             theme: undefined
         },
 
-        messages: {
-            "App.Theme.GetTheme": async () => model.theme,
-            "App.Theme.SetTheme": async (id) => await model.apply(id),
-            "App.Theme.ToggleTheme": async () => await model.toggle(),
-            "App.Theme.ListThemes": async () => THEMES,
-            "App.Theme.GetMode": async () => themeMode(model.theme),
-            "App.Theme.SetMode": async (mode) => await model.apply(themeIdForMode(mode))
-        },
-
         methods: {
             apply: async (id) => {
                 if (!isThemeId(id)) {
@@ -55,6 +46,15 @@ function useAppThemeManager(params?: AppThemeManagerParams): AppThemeManagerMode
             }
         },
 
+        messages: {
+            "App.Theme.GetTheme": async () => model.theme,
+            "App.Theme.SetTheme": async (id) => await model.apply(id),
+            "App.Theme.ToggleTheme": async () => await model.toggle(),
+            "App.Theme.ListThemes": async () => THEMES,
+            "App.Theme.GetMode": async () => themeMode(model.theme),
+            "App.Theme.SetMode": async (mode) => await model.apply(themeIdForMode(mode))
+        },
+
         // Resolved in constr, not init: another model's init may ask for the mode, and an async
         // init would not have run yet. Everything this needs (localStorage, matchMedia) is
         // synchronous, so there is no reason to defer it.
@@ -62,7 +62,7 @@ function useAppThemeManager(params?: AppThemeManagerParams): AppThemeManagerMode
             const id = _restore();
             model.theme = id;
             _stamp(id);
-        }
+        },
     };
 
     const model = useBase(struct, params);

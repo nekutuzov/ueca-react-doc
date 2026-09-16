@@ -61,13 +61,6 @@ function useDialog(params?: DialogParams): DialogModel {
             }
         },
 
-        // A dialog torn down while still open would otherwise leave focus on the page it no longer covers.
-        unmount: () => {
-            if (model.open) {
-                _returnFocus();
-            }
-        },
-
         // Focus moves into the panel once it is on screen. aria-modal tells a screen reader to stay
         // inside the dialog, so focus left on the trigger behind the backdrop would sit somewhere it
         // has just been told to ignore.
@@ -79,6 +72,13 @@ function useDialog(params?: DialogParams): DialogModel {
             if (panel) {
                 model.__focusPending = false;
                 panel.focus();
+            }
+        },
+
+        // A dialog torn down while still open would otherwise leave focus on the page it no longer covers.
+        unmount: () => {
+            if (model.open) {
+                _returnFocus();
             }
         },
 
@@ -122,7 +122,7 @@ function useDialog(params?: DialogParams): DialogModel {
                     </div>
                 </div>
             );
-        }
+        },
     };
 
     const model = useUIBase<DialogStruct>(struct, params);

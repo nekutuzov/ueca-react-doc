@@ -61,13 +61,6 @@ function useDrawer(params?: DrawerParams): DrawerModel {
             }
         },
 
-        // A drawer torn down while still open would otherwise leave focus on the page it no longer covers.
-        unmount: () => {
-            if (model.open) {
-                _returnFocus();
-            }
-        },
-
         // A modal drawer takes focus once its panel is on screen, as Dialog does: aria-modal tells a
         // screen reader to stay inside it, so focus must not be left on the page behind the backdrop.
         draw: () => {
@@ -80,6 +73,13 @@ function useDrawer(params?: DrawerParams): DrawerModel {
                 if (!panel.contains(document.activeElement)) {
                     panel.focus();
                 }
+            }
+        },
+
+        // A drawer torn down while still open would otherwise leave focus on the page it no longer covers.
+        unmount: () => {
+            if (model.open) {
+                _returnFocus();
             }
         },
 

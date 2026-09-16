@@ -36,20 +36,6 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
             id: useAppBrowsingHistory.name
         },
 
-        messages: {
-            // Both halves in one reply. The two methods below stay separate because a method call
-            // is synchronous and nothing can interleave; a bus round trip is where time passes, so
-            // that is where the address has to be read atomically.
-            "App.BrowsingHistory.GetActiveAddress": async () => ({
-                path: model.getActivePath(),
-                section: model.getActiveSection()
-            }),
-
-            "App.BrowsingHistory.Open": async (p) => await model.open(p.path, p.newTab),
-
-            "App.BrowsingHistory.Replace": async (p) => await model.replace(p.path)
-        },
-
         methods: {
             getActivePath: () => model.__activePath,
 
@@ -117,6 +103,20 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
             }
         },
 
+        messages: {
+            // Both halves in one reply. The two methods below stay separate because a method call
+            // is synchronous and nothing can interleave; a bus round trip is where time passes, so
+            // that is where the address has to be read atomically.
+            "App.BrowsingHistory.GetActiveAddress": async () => ({
+                path: model.getActivePath(),
+                section: model.getActiveSection()
+            }),
+
+            "App.BrowsingHistory.Open": async (p) => await model.open(p.path, p.newTab),
+
+            "App.BrowsingHistory.Replace": async (p) => await model.replace(p.path)
+        },
+
         // The active path is derived from window.location alone, so it is established here, in the
         // one-time synchronous constr hook. AppRouter reads it from its own init to resolve the
         // startup route, and init hooks are not ordered between models: doing this in init instead
@@ -144,7 +144,7 @@ function useAppBrowsingHistory(params?: BaseParams<AppBrowsingHistoryStruct>): A
         // listener is cheap to re-add, so pairing is right here.
         deinit: () => {
             _detachPopstate();
-        }
+        },
     }
 
     const model = useBase(struct, params);

@@ -67,6 +67,25 @@ function useRouter(params?: RouterParams): RouterModel {
             _currentView: undefined
         },
 
+        methods: {
+            lookupRoute: (path) => {
+                if (!path) {
+                    return;
+                }
+                const routeMeta = _getRegExRoute(path);
+                return routeMeta.regExRoute ? routeMeta.matchedRoute : undefined;
+            },
+
+            setPath: (path) => {
+                const route = model.lookupRoute(path)
+                if (!route) {
+                    return false;
+                }
+                model.route = route;
+                return !!model.route;
+            }
+        },
+
         events: {
             onChangeRoutes: () => {
                 model.__regExRoutes = undefined; // reset routes cache
@@ -106,28 +125,9 @@ function useRouter(params?: RouterParams): RouterModel {
             _drawRoute();
         },
 
-        methods: {
-            lookupRoute: (path) => {
-                if (!path) {
-                    return;
-                }
-                const routeMeta = _getRegExRoute(path);
-                return routeMeta.regExRoute ? routeMeta.matchedRoute : undefined;
-            },
-
-            setPath: (path) => {
-                const route = model.lookupRoute(path)
-                if (!route) {
-                    return false;
-                }
-                model.route = route;
-                return !!model.route;
-            }
-        },
-
         // Keyed by routeKey: identity, not the route object, is what decides whether the mounted
         // screen is kept or rebuilt. A section-only change resolves to the same key.
-        View: () => <React.Fragment key={routeKey(model.route)}>{model._currentView}</React.Fragment>
+        View: () => <React.Fragment key={routeKey(model.route)}>{model._currentView}</React.Fragment>,
     }
 
     const _rootURLTag = "/841408C0-C813-4CE9-9CD4-56968B735962/"; // Fake URL base for routes replacing the base. See routes starting with "//"

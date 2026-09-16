@@ -79,36 +79,6 @@ function useTabsContainer(params?: TabsContainerParams): TabsContainerModel {
             __scrollerRef: React.useRef<HTMLDivElement>(null),
         },
 
-        events: {
-            onChangeTabs: () => {
-                _initTabs();
-            },
-
-            onChangeTabsConfig: () => {
-                // Reset tabs to capture new tab models from tabViews
-                model.clearModelCache();
-                model.tabs = [];
-            },
-
-            onChangeSelectedTab: () => {
-                model.tabs?.map(x => x.selected = false);
-                if (model.selectedTab) {
-                    model.selectedTab.selected = true;
-                }
-                if (model.onChange) {
-                    asyncSafe(() => model.onChange(model));
-                }
-            },
-
-            onChangeOrientation: () => {
-                setTimeout(() => model._checkOverflow(), 0);
-            },
-
-            onChangeVariant: () => {
-                setTimeout(() => model._checkOverflow(), 0);
-            }
-        },
-
         methods: {
             getTab: (tabId) => model.tabs?.find(t => t.getTabId() === tabId),
 
@@ -231,8 +201,45 @@ function useTabsContainer(params?: TabsContainerParams): TabsContainerModel {
             }
         },
 
+        events: {
+            onChangeTabs: () => {
+                _initTabs();
+            },
+
+            onChangeTabsConfig: () => {
+                // Reset tabs to capture new tab models from tabViews
+                model.clearModelCache();
+                model.tabs = [];
+            },
+
+            onChangeSelectedTab: () => {
+                model.tabs?.map(x => x.selected = false);
+                if (model.selectedTab) {
+                    model.selectedTab.selected = true;
+                }
+                if (model.onChange) {
+                    asyncSafe(() => model.onChange(model));
+                }
+            },
+
+            onChangeOrientation: () => {
+                setTimeout(() => model._checkOverflow(), 0);
+            },
+
+            onChangeVariant: () => {
+                setTimeout(() => model._checkOverflow(), 0);
+            }
+        },
+
         init: () => {
             _initTabs();
+        },
+
+        draw: () => {
+            setTimeout(() => {
+                // Check overflow after render
+                model._checkOverflow();
+            }, 0);
         },
 
         mount: () => {
@@ -243,13 +250,6 @@ function useTabsContainer(params?: TabsContainerParams): TabsContainerModel {
         unmount: () => {
             // Cleanup resize listener
             window.removeEventListener('resize', model._checkOverflow);
-        },
-
-        draw: () => {
-            setTimeout(() => {
-                // Check overflow after render
-                model._checkOverflow();
-            }, 0);
         },
 
         View: () => {
@@ -276,7 +276,7 @@ function useTabsContainer(params?: TabsContainerParams): TabsContainerModel {
                     </Col>
                 </div>
             );
-        }
+        },
     };
 
     const model = useEditBase(struct, params);
