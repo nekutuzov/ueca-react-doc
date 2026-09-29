@@ -490,6 +490,12 @@ The copy is written with `node -e`, not a shell command, so `npm run deploy` is 
 This replaced a `deploy.ps1` that staged the build into a sibling `../ueca-react-doc-deploy` clone
 for a human to commit and push by hand.
 
+`gh-pages` works through a clone under `node_modules/.cache/gh-pages/`. On a drive that does not
+record ownership that clone needs its own `safe.directory` entry, or the publish fails claiming the
+remote is unconfigured — see the maintenance skill, which carries the exact command. Note also that
+`Published` is printed even when the tree was identical and nothing was committed: check the branch
+SHA, not the word.
+
 ## License
 
 ISC

@@ -247,8 +247,39 @@ until curl -s -H 'Cache-Control: no-cache' \
 
 Then check a **deep link**, not just the root, since that is what exercises `404.html`.
 
-**If the build output hashes are unchanged, there is nothing to deploy** — say so instead of pushing
-an empty commit. `gh-pages` will happily publish an identical tree.
+**If the build output hashes are unchanged, there is nothing to deploy** — say so instead of running
+a pointless publish.
+
+**`Published` does not mean a commit was made.** When the tree is byte-identical to the branch,
+`gh-pages` stages it, finds nothing changed, commits nothing, and still prints `Published` and exits
+0. Confirm by the SHA, never by the word:
+
+```bash
+git ls-remote --heads origin gh-pages      # before and after
+```
+
+### First publish on this machine needs a safe.directory entry
+
+`gh-pages` clones the branch into `node_modules/.cache/gh-pages/<mangled remote url>/` and runs git
+there. On this E: drive that path "does not record ownership", so git refuses it and `gh-pages`
+reports the misleading:
+
+```
+Error: Failed to get remote.origin.url (task must either be run in a git repository
+with a configured origin remote or ...)
+```
+
+The project's own remote is fine — the failure is inside the cache clone. `git config --get` there
+exits 1 *silently*, which hides it; `git -C <cache> remote -v` prints the real "dubious ownership"
+error and the exact command to fix it:
+
+```bash
+git config --global --add safe.directory \
+  'E:/CraneSoft/ueca/ueca-react-doc/node_modules/.cache/gh-pages/https!github.com!nekutuzov!ueca-react-doc.git'
+```
+
+One entry, once per machine. The cache directory name is derived from the remote URL, so it is stable
+across `npm install`; it only changes if the repository moves.
 
 ### It used to be a sibling clone
 
