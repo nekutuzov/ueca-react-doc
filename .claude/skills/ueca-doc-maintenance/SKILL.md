@@ -5,7 +5,7 @@ description: >
   this skill whenever the task is to upgrade `ueca-react` to a new version, refresh the agent skills,
   react to a release's changelog, add or reorder documentation articles, deploy to GitHub Pages, or
   verify the live site. Use it too before editing `README.md`, `CLAUDE.md`, `package.json`,
-  `.gitignore` or `deploy.ps1`, and whenever a release note says something about packaging,
+  `.gitignore` or the deploy scripts, and whenever a release note says something about packaging,
   installation, the shipped `docs/` folder or the skills. It carries the upgrade checklist, the places
   this project describes the same mechanism twice, and the traps that have actually cost time here —
   CRLF files, a shared dev port, a deploy that looks like a 404. For writing UECA components use
@@ -183,7 +183,7 @@ npm run build && npx vite preview --port 4180
 
 ### The live deep-link 404 is correct
 
-GitHub Pages has no SPA fallback. `deploy.ps1` writes `404.html` as a copy of `index.html`; Pages
+GitHub Pages has no SPA fallback. `predeploy` writes `404.html` as a copy of `index.html`; Pages
 serves it for unmatched paths and the app routes from `window.location`. So a deep link returns
 **HTTP 404 carrying the app** — the status stays 404 while the page works, and every asset it then
 loads is 200. Do not "fix" it. Confirm a real failure by checking the asset requests, not the
@@ -230,18 +230,14 @@ copies, not a constraint. A struct that departs from it is untidy, never broken.
 npm run deploy
 ```
 
-Builds, clears `../ueca-react-doc-deploy` keeping `.git`, copies `dist`, writes `404.html`. That
-folder is a **single-branch clone on `gh-pages`** — it has a `remote.origin.fetch` refspec for that
-branch alone, so it has no `master` ref and nothing to go stale. Commit and push from it.
+One command, and it is finished — the **`gh-pages` package** commits and pushes the branch itself.
+`predeploy` runs first: `npm run build`, then copy `dist/index.html` to `dist/404.html`.
 
-Before committing there, confirm the tree is the built site and nothing else:
+**Never drop the 404.html step.** It is the only reason deep links resolve on Pages, and losing it
+breaks every URL except the site root — which the home page will not show you. The copy is written
+with `node -e` rather than a shell command so the script is not Windows-only.
 
-```bash
-git ls-files | grep -E '^(src|public|node_modules|\.claude)/' || echo "clean"
-diff -q index.html 404.html
-```
-
-Pages takes a minute or two. Wait on the bundle name rather than guessing:
+Pages takes a minute or two. Wait on the new bundle name rather than guessing:
 
 ```bash
 until curl -s -H 'Cache-Control: no-cache' \
@@ -249,8 +245,19 @@ until curl -s -H 'Cache-Control: no-cache' \
   | grep -q '<new bundle hash>'; do sleep 10; done
 ```
 
+Then check a **deep link**, not just the root, since that is what exercises `404.html`.
+
 **If the build output hashes are unchanged, there is nothing to deploy** — say so instead of pushing
-an empty commit.
+an empty commit. `gh-pages` will happily publish an identical tree.
+
+### It used to be a sibling clone
+
+Until 2026-09-28 `npm run deploy` ran a `deploy.ps1` that staged the build into a
+`../ueca-react-doc-deploy` clone for a human to commit and push. If you find a reference to that
+folder, or to `deploy.ps1`, it is stale — the folder is gone and the script is deleted.
+
+`gh-pages` keeps its own working copy under `node_modules/.cache/gh-pages`. If a publish ever fails
+with a confusing git error, delete that cache and re-run.
 
 ---
 

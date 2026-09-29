@@ -66,11 +66,14 @@ Lint:
 npm run lint
 ```
 
-Deploy (builds and stages dist into ../ueca-react-doc-deploy for the gh-pages branch):
+Deploy (builds, writes dist/404.html, and publishes dist to the gh-pages branch):
 
 ```bash
 npm run deploy
 ```
+
+That is the whole thing - the gh-pages package commits and pushes the branch itself. There is no
+separate deployment folder to keep in step.
 
 ## How Navigation Works
 

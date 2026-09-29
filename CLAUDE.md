@@ -29,8 +29,8 @@ application.
 And one skill of our own, in the repo rather than from the package:
 
 - Invoke **`ueca-doc-maintenance`** before upgrading `ueca-react`, refreshing the skills, deploying,
-  adding a documentation article, or editing `README.md` / `package.json` / `.gitignore` /
-  `deploy.ps1`. It carries the upgrade checklist and the traps this project has actually hit. It is
+  adding a documentation article, or editing `README.md` / `package.json` / `.gitignore` or the
+  deploy scripts. It carries the upgrade checklist and the traps this project has hit. It is
   a living document — when a release teaches you something, write it back there in the same turn.
 
 Where this file and a skill disagree about the **framework**, the skill wins. Where they disagree
@@ -467,7 +467,7 @@ an upgrade that moves or renames a shipped file breaks the **build**, not the ru
 | `npm run dev` | Vite on port **5001**, base path `/ueca-react-doc/` |
 | `npm run build` | `tsc -b && vite build` |
 | `npm run lint` | ESLint — currently clean, keep it that way |
-| `npm run deploy` | Builds and stages `dist` into `../ueca-react-doc-deploy` (see below) |
+| `npm run deploy` | Builds, writes `dist/404.html`, publishes `dist` to `gh-pages` (see below) |
 | `npm install` | installs deps **and** refreshes `.claude/skills/` — our `postinstall` runs `npx ueca-react-skills --auto` |
 | `npx ueca-react-skills` | refresh the library skills on their own, without a full install |
 
@@ -475,13 +475,20 @@ If build/lint errors are unrelated to the changed scope, do not make broad unrel
 
 ## Deployment
 
-`npm run deploy` runs `deploy.ps1`: it builds, clears `../ueca-react-doc-deploy` (keeping `.git`),
-copies `dist` into it, and writes a `404.html` copy of `index.html`. Commit and push from that folder
-onto the `gh-pages` branch.
+`npm run deploy` publishes `dist` to the `gh-pages` branch with the **`gh-pages` package** — it
+commits and pushes the branch itself, so there is nothing to do afterwards and no second clone to
+keep in step. `predeploy` runs first and does two things: `npm run build`, then copy
+`dist/index.html` to `dist/404.html`.
 
-GitHub Pages has no SPA fallback: a direct request for `/docs/message-bus` has no file to serve and
-returns GitHub's own 404 page. Pages *does* serve `404.html` for unmatched paths, and this app routes
-from `window.location`, so the identical copy is what makes deep links resolve.
+That copy is load-bearing. GitHub Pages has no SPA fallback: a direct request for
+`/docs/message-bus` has no file to serve and returns GitHub's own 404 page. Pages *does* serve
+`404.html` for unmatched paths, and this app routes from `window.location`, so the identical copy is
+what makes deep links resolve. A deep link therefore answers **HTTP 404 carrying the app** — the
+status stays 404 while the page works. That is correct; do not "fix" it.
+
+The copy is written with `node -e`, not a shell command, so `npm run deploy` is not Windows-only.
+This replaced a `deploy.ps1` that staged the build into a sibling `../ueca-react-doc-deploy` clone
+for a human to commit and push by hand.
 
 ## License
 
