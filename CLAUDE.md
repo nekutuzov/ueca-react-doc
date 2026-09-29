@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This project is a documentation viewer for UECA-React, built **on** UECA-React 3.0.
+This project is a documentation viewer for UECA-React, built **on** UECA-React 3.1.
 
 Goals:
 - Keep Home screen as a greeting/landing page.
@@ -106,6 +106,27 @@ changelog and in the skill's pitfalls reference; these are the ones this codebas
 - **`React.StrictMode` is supported** as of v3. This app still does not enable it (see
   `appStart.tsx`) — it buys a UECA app nothing.
 
+### What 3.1.0 changed underneath
+
+Two corrections in the library that no code here had to be changed for, but that change what is
+true about this app:
+
+- **A model's `View` keeps its identity across renders.** It used to be a MobX computed, memoised
+  only while a reaction observed it — and `getFC` reads it from a plain function component, where
+  nothing does. So every render rebuilt the `observer()` wrappers, React saw a new element type, and
+  the subtree remounted. UECA children rode it out on the model cache, which is why it never showed;
+  **a plain React component underneath did not.** This app has exactly one —
+  `@uiw/react-markdown-preview` inside `markdownPreview.tsx` — which was therefore re-parsing the
+  article and rebuilding its DOM on every render of the screen around it. It no longer does.
+  `draw` still runs after every render and re-stamps the anchors, which is idempotent.
+- **A bound plain array is handed over once**, not on every run of its getter. An in-place change to
+  a *plain* source array no longer reaches the model just because the getter ran again; an
+  observable source, and assignment, are unaffected. **Nothing here relies on the old behaviour**:
+  every array-returning getter in this project builds a fresh array (`return [...]`, `.map(...)`),
+  so it never hands back the array the copy was made from, and every `push`/`splice` is either on a
+  model property (observable) or on a local. Keep it that way — a getter that returns a *stored*
+  plain array and expects a later `push` into it to reach the model would now silently do nothing.
+
 ### Declaration order
 
 3.0.3 settled one order across the guide, the code template, the shipped skills and `index.d.ts`:
@@ -170,7 +191,7 @@ something synchronously available (here, `window.location`) rather than from an 
     ("On this page", parsed from the markdown source) and `DocsPager` (prev/next, ordered by
     `DOC_ORDER`).
 
-## Current Implementation Snapshot (September 2026, ueca-react 3.0.3)
+## Current Implementation Snapshot (September 2026, ueca-react 3.1.0)
 
 - `src/screens/index.ts` exports only:
   - `home/homeScreen`
@@ -181,7 +202,7 @@ something synchronously available (here, `window.location`) rather than from an 
 - `src/core/appLayout/appSideBar.tsx` currently uses:
   - `useAppMenu` imported from `./appMenu`
   - Width behavior: collapsed `var(--sidebar-w-collapsed)` (60), expanded `var(--sidebar-w)` (300)
-  - Header: logo link, `UECA-React` wordmark, `3.0` version chip
+  - Header: logo link, `UECA-React` wordmark, `3.1` version chip
   - Collapses itself below `NARROW_VIEWPORT` (860px) via a `mount` resize listener, and only on
     the crossing — so a deliberate toggle survives a resize on one side of the breakpoint
 - Tracing this app is cheap as of 3.0.3: an inbound `bind` record is written only when the value
@@ -189,7 +210,12 @@ something synchronously available (here, `window.location`) rather than from an 
   record per item on every click. A TOC click traces 11 records now, not 33 — so a capture is worth
   reading rather than scrolling past.
 - `src/core/infrastructure/appUI.tsx` mounts `<UECA.TraceViewerButton />`. It is a lazily-loaded
-  chunk, so a closed viewer costs the bundle nothing. **Keep it** — it is there on purpose.
+  chunk, so a closed viewer costs the bundle nothing. **Keep it** — it is there on purpose. As of
+  3.1.0 the viewer is itself a UECA-React application, so the chunk carries React, MobX and the
+  library: 514 kB, 160 kB gzipped, up from 428 kB. Still downloaded only when someone opens it. It
+  now opens with `on screen only` **on** — the graph shows the app as it stands at the play head
+  rather than every component the recording has ever seen; switch it off in the Components popover
+  to get them all back.
 - Menu items carry a chapter `number` (`01`–`21`) rendered in the NavItem icon slot, so the
   numbering survives the collapse to an icon rail.
 - The rail scrolls the active chapter into view on every route change, and only when it is actually
@@ -277,8 +303,9 @@ keep it from happening:
 Before calling a layout change done, sweep for it rather than waiting to be shown a screenshot —
 in the browser console, flag every element whose `scrollWidth` exceeds its `clientWidth` while its
 computed `overflow-x` is not `auto`/`scroll` and its `text-overflow` is not `ellipsis` (those two
-are overflowing on purpose). Run it on Home and a long article at 1440 / 640 / 375. It should come
-back empty.
+are overflowing on purpose). Run it on Home and a long article at 1440 / 640 / 375. One entry is
+expected at 375 - the sidebar nav runs ~4px over inside a rail that clips it - so treat
+`document.body.scrollWidth > innerWidth` as the real test and anything beyond that NAV as new.
 
 ## Tooltips
 

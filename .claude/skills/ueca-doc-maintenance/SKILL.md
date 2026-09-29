@@ -86,7 +86,8 @@ If articles changed, follow **Documentation Routing** in `CLAUDE.md` — six pla
 sixth (`resolveDocPath`) leaves cross-links from other articles dead without any error.
 
 History: 3.0.1 moved the guide from `docs/` to `docs/raw/original/` and added two articles (19 → 21).
-3.0.2 and 3.0.3 changed nothing structural.
+3.0.2, 3.0.3 and 3.1.0 changed nothing structural — 3.1.0 touched only the index's version line and
+the Tracing guide's two (remote) screenshots.
 
 ### 4. Check asset references in the markdown
 
@@ -136,6 +137,20 @@ deep link to an article · all 21 sidebar entries · a cross-link between two ar
 theme toggle · a tooltip (real hover, not a synthetic event) · a section link · Back/Forward ·
 375px viewport.
 
+**Check the markdown subtree does not remount.** `@uiw/react-markdown-preview` is the only plain
+React component in the app, and 3.1.0 fixed the `View`-identity bug that had been remounting it on
+every render. Hold a node, force a re-render around it, and see whether it survives:
+
+```js
+const node = document.querySelector(".markdown-host h1");
+[...document.querySelectorAll("button")].find(b => /theme/i.test(b.getAttribute("aria-label") || "")).click();
+await new Promise(r => setTimeout(r, 800));
+document.querySelector(".markdown-host h1") === node   // true = not remounted
+```
+
+Then navigate to another article and confirm the heading *does* change — persistence must not stop
+updates.
+
 ---
 
 ## Traps that have actually cost time here
@@ -174,10 +189,32 @@ serves it for unmatched paths and the app routes from `window.location`. So a de
 loads is 200. Do not "fix" it. Confirm a real failure by checking the asset requests, not the
 document status.
 
+### The overflow sweep has one known entry
+
+`CLAUDE.md` says the horizontal-overflow sweep should come back empty. At 375px it does not, and that
+is the baseline rather than a fault: the sidebar `nav` measures ~230px against ~234px of content — one
+long chapter label — with `overflow-x: visible`, while the rail **above** it is `overflow-x: hidden`
+and clips it. `document.body.scrollWidth` stays at the viewport width, so nothing actually overflows
+the page.
+
+Treat that single `NAV` entry as expected; anything *else* in the list is new. Confirm containment
+with `document.body.scrollWidth > innerWidth` rather than by the element list alone.
+
 ### A stale console 404 from an earlier navigation
 
 The browser tool's console buffer survives navigation within a tab. A 404 reported there may be from
 a page you visited earlier. Confirm against `read_network_requests`, or open a fresh tab.
+
+### Bound plain arrays: build a fresh one
+
+As of 3.1.0 a binding hands a plain array over only when the getter returns a *different* array from
+the one the property's copy was made from. Every array-returning getter here builds a fresh array
+(`return [...]`, `.map(...)`), so all of them still assign — and every `push`/`splice` in the project
+is on a model property (observable) or on a local, so nothing depended on the old behaviour.
+
+Keep it that way. A getter that hands back a **stored** plain array and expects a later `push` into
+that array to reach the model would now silently do nothing — no assignment, no event, and no trace
+record to find it by.
 
 ### Struct section order is presentation
 

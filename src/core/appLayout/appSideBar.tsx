@@ -111,7 +111,7 @@ function useAppSideBar(params?: AppSideBarParams): AppSideBarModel {
                     >
                         <model.logoLink.View />
                         <span className="app-sidebar-wordmark">UECA-React</span>
-                        <span className="app-sidebar-version">3.0</span>
+                        <span className="app-sidebar-version">3.1</span>
                         {/* Centred like the brand beside it. Top-aligned, the button sat flush with
                             the rail's top edge, ten pixels above the wordmark, with the top of its
                             focus ring cut off by the layout's clip. */}
