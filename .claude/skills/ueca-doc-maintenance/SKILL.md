@@ -233,6 +233,14 @@ npm run deploy
 One command, and it is finished — the **`gh-pages` package** commits and pushes the branch itself.
 `predeploy` runs first: `npm run build`, then copy `dist/index.html` to `dist/404.html`.
 
+`--no-history` keeps the branch at **exactly one parentless commit**, force-pushed each time. The
+branch is build output, so nothing is lost: any published state is reproducible from the `master`
+commit that built it. It is not an ancestor of `master` and never will be — never merge or rebase
+between them, and `git log origin/gh-pages` will only ever show one entry.
+
+The history was flattened on 2026-09-28. It had reached 20 commits and ~7.6 MB of superseded
+bundles, and still carried `master`'s early history from when the branch was first cut off it.
+
 **Never drop the 404.html step.** It is the only reason deep links resolve on Pages, and losing it
 breaks every URL except the site root — which the home page will not show you. The copy is written
 with `node -e` rather than a shell command so the script is not Windows-only.

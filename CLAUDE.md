@@ -480,6 +480,12 @@ commits and pushes the branch itself, so there is nothing to do afterwards and n
 keep in step. `predeploy` runs first and does two things: `npm run build`, then copy
 `dist/index.html` to `dist/404.html`.
 
+**`--no-history` means the branch is always exactly one commit.** Each deploy force-pushes a fresh
+parentless commit, so the built bundles never accumulate. That is deliberate: the branch is output,
+not source, and any published state can be rebuilt from the `master` commit that produced it. It
+also means `gh-pages` is **not** an ancestor of `master` and never will be — do not try to merge,
+rebase or cherry-pick between them.
+
 That copy is load-bearing. GitHub Pages has no SPA fallback: a direct request for
 `/docs/message-bus` has no file to serve and returns GitHub's own 404 page. Pages *does* serve
 `404.html` for unmatched paths, and this app routes from `window.location`, so the identical copy is

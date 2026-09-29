@@ -20,7 +20,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build && node -e \"require('fs').copyFileSync('dist/index.html', 'dist/404.html')\"",
-    "deploy": "gh-pages -d dist -m \"Update GitHub Pages\"",
+    "deploy": "gh-pages -d dist --no-history -m \"Update GitHub Pages\"",
     "postinstall": "npx ueca-react-skills --auto"
   },
   "dependencies": {

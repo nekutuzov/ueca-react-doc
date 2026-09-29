@@ -75,6 +75,10 @@ npm run deploy
 That is the whole thing - the gh-pages package commits and pushes the branch itself. There is no
 separate deployment folder to keep in step.
 
+The branch keeps no history: each deploy force-pushes a single parentless commit holding the current
+site. Nothing is lost by that - the branch is build output, and every published state is
+reproducible by checking out the matching master commit and running the build.
+
 ## How Navigation Works
 
 1. The sidebar menu is the docs index.
