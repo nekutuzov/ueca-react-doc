@@ -213,7 +213,7 @@ something synchronously available (here, `window.location`) rather than from an 
     ("On this page", parsed from the markdown source) and `DocsPager` (prev/next, ordered by
     `DOC_ORDER`).
 
-## Current Implementation Snapshot (October 2026, ueca-react 3.2.0)
+## Current Implementation Snapshot (October 2026, ueca-react 3.2.1)
 
 - `src/screens/index.ts` exports only:
   - `home/homeScreen`
@@ -231,6 +231,12 @@ something synchronously available (here, `window.location`) rather than from an 
   actually **moves**. The menu binding 21 items to the current route used to write a `false → false`
   record per item on every click. A TOC click traces 11 records now, not 33 — so a capture is worth
   reading rather than scrolling past.
+- **Keep an eye on the main chunk after a library upgrade.** 3.2.0 named components for React
+  DevTools inside `getFC`, which every component module calls at load; Rollup read that as a side
+  effect and stopped tree-shaking component modules. This app's bundle went 1,574 → 1,603 kB.
+  3.2.1 names the component on first render instead and recovered 16 kB of it — the remaining
+  ~13 kB over 3.1.0 is genuine new 3.2 library code. Nothing failed and no test caught it; only the
+  bundle size showed it, which is why the numbers are worth a glance on every upgrade.
 - `src/core/infrastructure/appUI.tsx` mounts `<UECA.TraceViewerButton />`. It is a lazily-loaded
   chunk, so a closed viewer costs the bundle nothing. **Keep it** — it is there on purpose. As of
   3.1.0 the viewer is itself a UECA-React application, so the chunk carries React, MobX and the

@@ -74,9 +74,19 @@ Read the **whole** entry, not the breaking-changes heading. 3.0.2 and 3.0.3 both
 changed" and both still required project work — a packaging change in one, a documentation
 restructure in the other. Treat every bullet as a question: *does this project do that?*
 
-**Check the version exists before planning around it.** A request can name one that was never
-published; `npm view ueca-react versions` and the local `../ueca-react-npm/package.json` settle it
-in one step, and it is cheaper to ask than to upgrade to the wrong thing.
+**Check the version exists before planning around it** — and check it *online*. A request can name
+one that was never published (3.3 was), but `npm view` reads a local metadata cache and will deny a
+version published minutes ago. Plain `npm view ueca-react versions` reported 3.2.1 missing when it
+was already latest. Use one that cannot be stale:
+
+```bash
+npm view ueca-react versions --prefer-online
+curl -s https://registry.npmjs.org/ueca-react | node -e "let d='';process.stdin.on('data',c=>d+=c)\
+  .on('end',()=>console.log(JSON.parse(d)['dist-tags'].latest))"
+```
+
+Cross-check `../ueca-react-npm/package.json`, which is the source the package is published from. A
+false "that version does not exist" is worse than asking, so confirm before reporting one.
 
 **When a release turns silent mistakes into throws, grep for each one.** 3.2.0 added four, and a
 clean `tsc` proves nothing about them because they fire at render. The one worth a script is "a JSX
@@ -140,6 +150,11 @@ Beyond the two-files rule above, check the things that quietly go stale:
 ```bash
 npm run build && npm run lint
 ```
+
+**Read the chunk sizes, do not just let them scroll past.** 3.2.0 shipped a tree-shaking regression
+that nothing else could see: no error, no failing test, only the main chunk going 1,574 → 1,603 kB.
+3.2.1 fixed it. Compare against the previous release's numbers, and treat an unexplained jump as a
+finding rather than noise.
 
 Then in a browser, against the **production build** (see *Dev port* below):
 
