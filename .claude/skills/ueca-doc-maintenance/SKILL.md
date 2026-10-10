@@ -321,7 +321,13 @@ Until 2026-09-28 `npm run deploy` ran a `deploy.ps1` that staged the build into 
 folder, or to `deploy.ps1`, it is stale — the folder is gone and the script is deleted.
 
 `gh-pages` keeps its own working copy under `node_modules/.cache/gh-pages`. If a publish ever fails
-with a confusing git error, delete that cache and re-run.
+with a confusing git error, delete that cache and re-run. It is safe to delete whenever its tree is
+clean and its HEAD matches `origin/gh-pages`, and worth doing occasionally: it had reached 11 MB,
+nearly all of it dangling objects from the history that was flattened out from under it.
+
+**Deleting the cache does not mean deleting its `safe.directory` entry.** The path is derived from
+the remote URL, so the fresh clone lands in exactly the same place and needs the same exception.
+Removing both while tidying up brings back the misleading `Failed to get remote.origin.url`.
 
 ---
 
