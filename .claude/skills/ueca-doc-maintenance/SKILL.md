@@ -74,6 +74,16 @@ Read the **whole** entry, not the breaking-changes heading. 3.0.2 and 3.0.3 both
 changed" and both still required project work — a packaging change in one, a documentation
 restructure in the other. Treat every bullet as a question: *does this project do that?*
 
+**Check the version exists before planning around it.** A request can name one that was never
+published; `npm view ueca-react versions` and the local `../ueca-react-npm/package.json` settle it
+in one step, and it is cheaper to ask than to upgrade to the wrong thing.
+
+**When a release turns silent mistakes into throws, grep for each one.** 3.2.0 added four, and a
+clean `tsc` proves nothing about them because they fire at render. The one worth a script is "a JSX
+child whose `id` is already a member of its owner": collect each struct's member names, collect the
+literal `id=` values given to child components in the same file, and intersect. Then exercise every
+screen in a browser — they reach `globalSettings.errorHandler`, not the compiler.
+
 ### 3. Diff the shipped docs
 
 ```bash
@@ -86,8 +96,8 @@ If articles changed, follow **Documentation Routing** in `CLAUDE.md` — six pla
 sixth (`resolveDocPath`) leaves cross-links from other articles dead without any error.
 
 History: 3.0.1 moved the guide from `docs/` to `docs/raw/original/` and added two articles (19 → 21).
-3.0.2, 3.0.3 and 3.1.0 changed nothing structural — 3.1.0 touched only the index's version line and
-the Tracing guide's two (remote) screenshots.
+3.0.2, 3.0.3, 3.1.0 and 3.2.0 changed nothing structural — 3.1.0 touched only the index's version
+line and the Tracing guide's two (remote) screenshots, and 3.2.0 only the version line.
 
 ### 4. Check asset references in the markdown
 

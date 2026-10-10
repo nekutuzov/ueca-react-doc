@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This project is a documentation viewer for UECA-React, built **on** UECA-React 3.1.
+This project is a documentation viewer for UECA-React, built **on** UECA-React 3.2.
 
 Goals:
 - Keep Home screen as a greeting/landing page.
@@ -103,8 +103,30 @@ changelog and in the skill's pitfalls reference; these are the ones this codebas
   the getter, never a conditional `UECA.bind(...)` in JSX.
 - **`children`-section constants are initial values only** — they are no longer re-asserted when a
   cached model remounts. JSX props are standing declarations and *are* re-applied every render.
-- **`React.StrictMode` is supported** as of v3. This app still does not enable it (see
-  `appStart.tsx`) — it buys a UECA app nothing.
+- **`React.StrictMode` is supported** as of v3, and as of 3.2.0 behaves *exactly* as no StrictMode
+  (`deinit` had never run under it, leaving binding reactions armed — on React 19 and 18 alike).
+  React 18 is tested upstream too. This app still does not enable it (see `appStart.tsx`) — it buys
+  a UECA app nothing.
+
+### Four mistakes that throw as of 3.2.0
+
+Each used to misbehave silently; each now throws during the render that made it, naming the owner,
+the id or the hook. None is present in this codebase — checked at the 3.2.0 upgrade — so this list
+is about not introducing one:
+
+- **A JSX child whose `id` is already a member of its owner.** `<TextField id="name" />` inside a
+  component that has a `name` prop. The natural ids are the dangerous ones: `name`, `title`,
+  `value`, `label`. It used to overwrite the prop or hand back the wrong model.
+- **A cached component whose child hook calls change between mounts** — `editing ? useButton() :
+  useCounter()` in a `children` section. Each call used to be handed another hook's model.
+- **A param written over a cached JSX child**, as a `{...rest}` spread can do when a cached owner
+  comes back.
+- **A lifecycle hook assigned to a model** — `model.init = …`. Hooks are read from the struct and
+  the params, never from an assignment; it used to be accepted and silently never run.
+
+And one pattern that now *works*: two different components under one id at different times
+(`editing ? <TextField id="name" /> : <Label id="name" />`). The second used to take the first's
+model and never appear.
 
 ### What 3.1.0 changed underneath
 
@@ -191,7 +213,7 @@ something synchronously available (here, `window.location`) rather than from an 
     ("On this page", parsed from the markdown source) and `DocsPager` (prev/next, ordered by
     `DOC_ORDER`).
 
-## Current Implementation Snapshot (September 2026, ueca-react 3.1.0)
+## Current Implementation Snapshot (October 2026, ueca-react 3.2.0)
 
 - `src/screens/index.ts` exports only:
   - `home/homeScreen`
@@ -202,7 +224,7 @@ something synchronously available (here, `window.location`) rather than from an 
 - `src/core/appLayout/appSideBar.tsx` currently uses:
   - `useAppMenu` imported from `./appMenu`
   - Width behavior: collapsed `var(--sidebar-w-collapsed)` (60), expanded `var(--sidebar-w)` (300)
-  - Header: logo link, `UECA-React` wordmark, `3.1` version chip
+  - Header: logo link, `UECA-React` wordmark, `3.2` version chip
   - Collapses itself below `NARROW_VIEWPORT` (860px) via a `mount` resize listener, and only on
     the crossing — so a deliberate toggle survives a resize on one side of the breakpoint
 - Tracing this app is cheap as of 3.0.3: an inbound `bind` record is written only when the value
@@ -267,6 +289,19 @@ consumers follow a theme switch with no re-render. **Change colours in `themes.c
 stamps `<html data-theme>` / `data-color-mode`, persists to `localStorage`, and answers the
 `App.Theme.*` messages. `index.html` carries a matching no-flash script — keep its key and default
 in sync with `THEME_STORAGE_KEY` / `preferredThemeId()`.
+
+## `render` means two different things here
+
+3.2.0 gave **every UECA component element** a built-in `render={false}`: it renders nothing *and*
+does not call the hook, so no model is built or taken from the cache, and turning it false runs
+`erase` / `unmount` / `deinit` and frees the id. It is a flag of the element — `useX(params)` does
+not take it.
+
+`Block` / `Row` / `Col` in `layout.tsx` have had a `render?: boolean` prop of their own all along
+(`<Row render={model.collapsed}>` in `appSideBar.tsx`). **They do not collide**: the layout
+primitives are plain React functions, not `getFC` components, so their `render` is their own prop
+and they check it themselves. Keep that in mind when reading the two — same name, different
+mechanism, and only the UECA one frees a model.
 
 ## Layout gotcha: inline styles beat your stylesheet
 
