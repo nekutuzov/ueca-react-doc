@@ -61,7 +61,7 @@ const DEMOS: { name: string; note: string; demo: string; source: string }[] = [
     },
     {
         name: "This documentation site",
-        note: "Built on UECA-React 3.0, and its own longest-running test.",
+        note: "Built on UECA-React 3.2, and its own longest-running test.",
         demo: "https://nekutuzov.github.io/ueca-react-doc",
         source: "https://github.com/nekutuzov/ueca-react-doc"
     }
@@ -71,7 +71,7 @@ function useHomeHero(params?: HomeHeroParams): HomeHeroModel {
     const struct: HomeHeroStruct = {
         props: {
             id: useHomeHero.name,
-            version: "3.0"
+            version: "3.2"
         },
 
         methods: {

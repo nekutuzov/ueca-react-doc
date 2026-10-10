@@ -38,6 +38,7 @@ const otherRoutes = {
     "https://github.com/nekutuzov/ueca-react-doc": () => null,    
     "https://youtu.be/SQl8f-qGxwU?si=-YTWPpPB7ExBZ6L0": () => null,
     "https://www.npmjs.com/package/ueca-react": () => null,
+    "https://dev.to/nekutuzov": () => null,
     "mailto:cranesoft@protonmail.com": () => null
 };
 

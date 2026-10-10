@@ -142,7 +142,15 @@ Beyond the two-files rule above, check the things that quietly go stale:
 - `CLAUDE.md` — the *Current Implementation Snapshot* heading names a version; the article count; any
   behaviour the release changed
 - `README.md` — article count, setup commands, anything about skills
-- `src/core/appLayout/appSideBar.tsx` — the version chip (`3.0`); only needs touching on a minor
+- **the version appears in three places, not one** — and `homeHero` was missed on both the 3.1 and
+  3.2 upgrades, so the Home page still advertised 3.0 two releases later:
+  - `src/core/appLayout/appSideBar.tsx` — the chip in the sidebar header
+  - `src/screens/home/homeHero/homeHero.tsx` — **twice**: the `version` prop, and the
+    "Built on UECA-React X.Y" note in the reference-apps list
+  - `CLAUDE.md` — the *Purpose* line and the snapshot heading
+
+  Only a minor moves the user-visible `X.Y`; a patch moves just the snapshot heading. Sweep with
+  `grep -rn "3\.1" src/ CLAUDE.md README.md` using the *old* number before you change anything.
 - `package.json` — scripts, if the release changed how anything is invoked
 
 ### 7. Verify

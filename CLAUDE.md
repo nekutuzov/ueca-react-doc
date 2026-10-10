@@ -382,7 +382,12 @@ To give any element a tooltip, spread the base-hook helper:
 
 ## External links
 
-**Every link to another site opens in a new tab.** Three routes, all already wired:
+**Every link to another site opens in a new tab.** Three routes, all already wired.
+
+**A new external URL must be added to `otherRoutes` in `appRoutes.tsx` first.** `AnyRoute`'s `path`
+type is derived from that object, so `openNewTab({ path: "https://…" })` with an unlisted URL is a
+compile error, not a runtime surprise. The dev.to contact needed its entry there before it would
+build.
 
 - UECA components — `model.openNewTab({ path })`, or `newTab: true` on a `NavLink`. A `GoToRoute`
   or `SetRoute` to another origin opens a new tab as well, and leaves the screen on show.
