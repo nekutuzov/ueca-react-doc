@@ -149,6 +149,26 @@ true about this app:
   model property (observable) or on a local. Keep it that way — a getter that returns a *stored*
   plain array and expects a later `push` into it to reach the model would now silently do nothing.
 
+### What 3.2.2 changed underneath
+
+Two more corrections that needed no code here — checked at the 3.2.2 upgrade:
+
+- **An element's `id` now keys it**, so an element whose `id` changes is a new mount with the model
+  of its new `id`; it used to keep the old model and rename it. This app never leaned on either
+  behaviour: every article route renders `<DocsScreen id={"docsScreen"} …>`, and what rebuilds the
+  screen between articles is the router's `<React.Fragment key={routeKey(model.route)}>`. The one
+  element whose `id` is not taken from its item is the breadcrumb `NavLink` (`id={`bc${i}`}`,
+  `key={bc.route.path}`) — the trail is always `[/home, article]`, so a path never changes position
+  and its `id` never moves. If it ever did, the link would now remount instead of being renamed,
+  which a stateless link does not notice. Prefer an id derived from the item anyway.
+- **A bound object that comes back equal by content is taken as the new instance**, with no
+  `onChanging` / `onChange`. The objects bound here are routes — `AppLayout.route` reads
+  `model.router.route` — and the one place that relies on a route object's identity is
+  `_setRouteParams` in `appRouter.tsx`, which writes `section` and `params` through the layout's live
+  route. The change can only keep that object the same as the router's, never part them. Checked in
+  the browser: a TOC click still patches the address without remounting the article, and
+  Back/Forward still rebuild.
+
 ### Declaration order
 
 3.0.3 settled one order across the guide, the code template, the shipped skills and `index.d.ts`:
@@ -213,7 +233,7 @@ something synchronously available (here, `window.location`) rather than from an 
     ("On this page", parsed from the markdown source) and `DocsPager` (prev/next, ordered by
     `DOC_ORDER`).
 
-## Current Implementation Snapshot (October 2026, ueca-react 3.2.1)
+## Current Implementation Snapshot (November 2026, ueca-react 3.2.2)
 
 - `src/screens/index.ts` exports only:
   - `home/homeScreen`
@@ -236,7 +256,9 @@ something synchronously available (here, `window.location`) rather than from an 
   effect and stopped tree-shaking component modules. This app's bundle went 1,574 → 1,603 kB.
   3.2.1 names the component on first render instead and recovered 16 kB of it — the remaining
   ~13 kB over 3.1.0 is genuine new 3.2 library code. Nothing failed and no test caught it; only the
-  bundle size showed it, which is why the numbers are worth a glance on every upgrade.
+  bundle size showed it, which is why the numbers are worth a glance on every upgrade. 3.2.2 took it
+  to 1,593 kB: +4.7 kB, of which 4.5 kB is guide text the release rewrote — the articles are bundled
+  as `?raw` strings, so a documentation-only release moves this number too.
 - `src/core/infrastructure/appUI.tsx` mounts `<UECA.TraceViewerButton />`. It is a lazily-loaded
   chunk, so a closed viewer costs the bundle nothing. **Keep it** — it is there on purpose. As of
   3.1.0 the viewer is itself a UECA-React application, so the chunk carries React, MobX and the
@@ -340,6 +362,15 @@ keep it from happening:
   an index of chapters has no horizontal axis;
 - `overflow-wrap: anywhere`, not `break-word`, when a label is the backstop: only `anywhere` lowers
   the min-content width, which is the number that actually decides whether the item can shrink.
+- **cards that share a row on a phone start from `min-content` and may wrap** — `flex: 1 1
+  min-content; max-width: max-content` with `flex-wrap: wrap` on the row, as the docs pager does
+  below 640px. A pair that fits shares the row as before; a pair that cannot (chapter 11's
+  `onPropChanging` beside `onChange<Prop>`) stacks instead of running 8px past the column. Breaking
+  the word with `anywhere` was tried there and is worse: `onChanging<Prop` / `> Events`. Titles
+  with `<Prop>` also get a `<wbr>` before the `<` in the pager, so the bracket is where they break.
+
+The pager is per article, so one long article does not exercise it: sweep the pager by clicking
+Next through all 21 at 375px. A title change is what last broke it.
 
 Before calling a layout change done, sweep for it rather than waiting to be shown a screenshot —
 in the browser console, flag every element whose `scrollWidth` exceeds its `clientWidth` while its

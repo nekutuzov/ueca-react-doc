@@ -132,12 +132,12 @@ function useAppMenu(params?: AppMenuParams): AppMenuModel {
                 route: { path: "/docs/property-bindings" }
             }),
             onchangeEventsMenuItem: useMenuItem({
-                text: "Automatic onChange Events",
+                text: "Automatic onChange<Prop> Events",
                 number: "10",
                 route: { path: "/docs/onchange-events" }
             }),
             onchangingEventsMenuItem: useMenuItem({
-                text: "Automatic onChanging Events",
+                text: "Automatic onChanging<Prop> Events",
                 number: "11",
                 route: { path: "/docs/onchanging-events" }
             }),

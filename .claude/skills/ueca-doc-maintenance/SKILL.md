@@ -61,7 +61,11 @@ what you did not record.
 SP="$(mktemp -d)"
 find node_modules/ueca-react/docs -type f | sed 's|node_modules/ueca-react/||' | sort > "$SP/docs-before.txt"
 cp node_modules/ueca-react/docs/raw/index.md "$SP/index-before.md"
+(cd node_modules/ueca-react && find docs skills -type f -exec md5sum {} + | sort -k2) > "$SP/hashes-before.txt"
 ```
+
+The file list catches a moved or added article; only the hashes catch one **rewritten in place**.
+3.2.2 rewrote four articles with no change to the list.
 
 ### 2. Install, then read the changelog properly
 
@@ -100,14 +104,45 @@ screen in a browser — they reach `globalSettings.errorHandler`, not the compil
 diff "$SP/docs-before.txt" <(find node_modules/ueca-react/docs -type f | sed 's|node_modules/ueca-react/||' | sort)
 diff "$SP/index-before.md" node_modules/ueca-react/docs/raw/index.md
 grep -cE '^[0-9]+\. \[' node_modules/ueca-react/docs/raw/index.md   # article count
+diff "$SP/hashes-before.txt" <(cd node_modules/ueca-react && find docs skills -type f -exec md5sum {} + | sort -k2)
 ```
+
+A rewritten article reaches the site with no work, but read what changed: the project's own
+`CLAUDE.md` may repeat what the old text said, and the text is bundled, so it moves the chunk size.
 
 If articles changed, follow **Documentation Routing** in `CLAUDE.md` — six places, and missing the
 sixth (`resolveDocPath`) leaves cross-links from other articles dead without any error.
 
+**Then compare the titles with the index on every upgrade, whether or not the index changed.** The
+diffs above only compare one release with the last, so drift that is already there never shows:
+2.0.7 renamed chapters 10 and 11 to `onChange<Prop>` / `onChanging<Prop>`, and the menu and the
+breadcrumb titles kept the old names through six upgrades, until someone asked. Run it from the
+project root:
+
+```bash
+node -e '
+const fs = require("fs");
+const bs = String.fromCharCode(92); // the index escapes "<" as "\<"; a literal backslash here gets mangled on Windows
+const guide = [...fs.readFileSync("node_modules/ueca-react/docs/raw/index.md", "utf8").matchAll(/^\d+\. \[(.+?)\]\(/gm)].map(m => m[1].split(bs).join(""));
+const menu = [...fs.readFileSync("src/core/appLayout/appMenu.tsx", "utf8").matchAll(/text: "([^"]+)",\s*number:/g)].map(m => m[1]);
+const ds = fs.readFileSync("src/screens/docs/docsScreen.tsx", "utf8");
+const titles = [...ds.slice(ds.indexOf("function _articleTitle"), ds.indexOf("function _articleSource")).matchAll(/return "([^"]+)";/g)].map(m => m[1]);
+console.log("guide", guide.length, "menu", menu.length, "titles", titles.length);
+guide.forEach((t, i) => {
+  if (t !== menu[i]) console.log(String(i + 1).padStart(2), "menu: ", JSON.stringify(menu[i]), " guide:", JSON.stringify(t));
+  if (t !== titles[i]) console.log(String(i + 1).padStart(2), "title:", JSON.stringify(titles[i]), " guide:", JSON.stringify(t));
+});'
+```
+
+One line is expected: chapter 12's **menu** label is `Automatic onPropChange / onPropChanging`, shortened
+on purpose because the full title is too wide for the rail (the comment in `appMenu.tsx` says why).
+Its breadcrumb title is the full one. Anything else is drift.
+
 History: 3.0.1 moved the guide from `docs/` to `docs/raw/original/` and added two articles (19 → 21).
-3.0.2, 3.0.3, 3.1.0 and 3.2.0 changed nothing structural — 3.1.0 touched only the index's version
-line and the Tracing guide's two (remote) screenshots, and 3.2.0 only the version line.
+3.0.2 through 3.2.2 changed nothing structural — 3.1.0 touched only the index's version line and the
+Tracing guide's two (remote) screenshots; 3.2.0 and 3.2.1 only the version line; 3.2.2 the version
+line plus the text of Lifecycle Hooks, Model Caching, Property Bindings and Utility Functions
+(`draw`/`erase` run around every render, identity comparison on assignment).
 
 ### 4. Check asset references in the markdown
 
@@ -129,7 +164,13 @@ so nothing was needed locally. Do not assume that next time.
 npx ueca-react-skills
 diff <(find node_modules/ueca-react/skills -type f -path '*ueca-app-*' | sed 's|node_modules/ueca-react/skills/||' | sort) \
      <(find .claude/skills -type f -path '*ueca-app-*' | sed 's|.claude/skills/||' | sort)
+for f in $(cd node_modules/ueca-react/skills && find . -type f -path '*ueca-app-*'); do
+  cmp -s "node_modules/ueca-react/skills/$f" ".claude/skills/$f" || echo "DIFFERS: $f"; done
 ```
+
+The list diff alone proves nothing about contents — 3.2.2 corrected the skills and the scaffold
+without adding or removing a file. Nor does the command's own output: it prints `updated` for every
+directory even when run twice in a row on an identical tree. Silence from `cmp` is the proof.
 
 The command **replaces** each library skill directory. Our `postinstall` is
 `npx ueca-react-skills --auto`; `ueca-react` itself ships no install hook. Verify rather than assume:
@@ -163,6 +204,12 @@ npm run build && npm run lint
 that nothing else could see: no error, no failing test, only the main chunk going 1,574 → 1,603 kB.
 3.2.1 fixed it. Compare against the previous release's numbers, and treat an unexplained jump as a
 finding rather than noise.
+
+Main chunk by release: 3.1.0 1,574 kB · 3.2.0 1,603 · 3.2.1 1,588 · 3.2.2 1,593. The 3.2.2 step is
+explained — 4.5 kB of rewritten guide text (the articles are `?raw` strings in this chunk) and ~30
+lines of library source. To account for a jump, measure both from the library repo:
+`git ls-tree -r -l <old-cut> -- docs/raw/original` against the new cut, and
+`git diff --shortstat <old-cut> <new-cut> -- src ':!src/__tests__' ':!src/traceViewerHtml.ts'`.
 
 Then in a browser, against the **production build** (see *Dev port* below):
 
@@ -212,6 +259,15 @@ Check before trusting a page you loaded, and prefer verifying the production bui
 
 ```bash
 npm run build && npx vite preview --port 4180
+```
+
+**Stopping it means stopping `node`, not `npx`.** Run in the background and stopped by its task, only
+the `npx`/`cmd` wrapper dies; `vite.js preview` keeps the port and goes on serving `dist/` from
+disk, so a rebuild still shows up and nothing looks wrong — until the next `--strictPort` start
+fails with exit 1. Find it by the port and stop that process:
+
+```powershell
+$c = Get-NetTCPConnection -LocalPort 4180 -State Listen; Get-CimInstance Win32_Process -Filter "ProcessId = $($c.OwningProcess)"
 ```
 
 ### The live deep-link 404 is correct

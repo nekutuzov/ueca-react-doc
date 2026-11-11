@@ -47,13 +47,13 @@ function useDocsPager(params?: DocsPagerParams): DocsPagerModel {
                     {model.prevPath
                         ? <button type="button" className="docs-pager-link" onClick={() => model.go(model.prevPath)}>
                             <span className="docs-pager-dir ueca-eyebrow"><ArrowLeftIcon size={13} /> Previous</span>
-                            <span className="docs-pager-title">{model.prevLabel}</span>
+                            <span className="docs-pager-title">{_breakable(model.prevLabel)}</span>
                         </button>
                         : <span />}
                     {model.nextPath
                         ? <button type="button" className="docs-pager-link docs-pager-next" onClick={() => model.go(model.nextPath)}>
                             <span className="docs-pager-dir ueca-eyebrow">Next <ArrowRightIcon size={13} /></span>
-                            <span className="docs-pager-title">{model.nextLabel}</span>
+                            <span className="docs-pager-title">{_breakable(model.nextLabel)}</span>
                         </button>
                         : <span />}
                 </Row>
@@ -63,6 +63,15 @@ function useDocsPager(params?: DocsPagerParams): DocsPagerModel {
 
     const model = useUIBase(struct, params);
     return model;
+
+    // Private methods
+
+    // "onChanging<Prop>" is a single word to the line breaker, and on a phone it held the next
+    // card wider than the pager. A <wbr> before each "<" lets the title break there and nowhere
+    // else, so the card needs no more room than "onChanging" alone; the text is unchanged.
+    function _breakable(label: string) {
+        return label?.split("<").flatMap((part, i) => i === 0 ? [part] : [<wbr key={i} />, "<" + part]);
+    }
 }
 
 const DocsPager = UECA.getFC(useDocsPager);

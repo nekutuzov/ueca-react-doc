@@ -54,8 +54,22 @@
     line-height: var(--leading-snug);
 }
 
+/* On a phone the cards start from their narrowest width and grow, rather than starting wide and
+   shrinking - a card cannot shrink below its longest word, so "onPropChanging" next to another
+   title pushed the pair 8px past the column. Starting narrow, a pair that fits shares the row as
+   before, and one that cannot fit wraps onto two rows instead of overflowing. `max-content` stops
+   a short title stretching its card; margin-left keeps a wrapped "next" card on the right. */
 @media (max-width: 640px) {
+    .docs-pager {
+        flex-wrap: wrap;
+    }
+
     .docs-pager-link {
-        max-width: 100%;
+        flex: 1 1 min-content;
+        max-width: max-content;
+    }
+
+    .docs-pager-next {
+        margin-left: auto;
     }
 }

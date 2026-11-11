@@ -305,9 +305,9 @@ function useDocsScreen(params?: DocsScreenParams): DocsScreenModel {
             case "property-bindings":
                 return "Property Bindings";
             case "onchange-events":
-                return "Automatic onChange Events";
+                return "Automatic onChange<Prop> Events";
             case "onchanging-events":
-                return "Automatic onChanging Events";
+                return "Automatic onChanging<Prop> Events";
             case "onprop-events":
                 return "Automatic onPropChange and onPropChanging Events";
             case "message-bus":
