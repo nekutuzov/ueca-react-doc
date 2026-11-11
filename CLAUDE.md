@@ -43,7 +43,7 @@ replaced. `CLAUDE.md` is loaded into context automatically and the README is not
 the one that rots. After any change to setup, build, install or deploy, grep both.
 
 `.claude/skills/ueca-app-development/` and `.claude/skills/ueca-app-architecture/` are generated —
-gitignored by name, and reinstalled on every `npm install` by our own `postinstall`,
+gitignored (with the rest of `.claude/skills/`, see below), and reinstalled on every `npm install` by our own `postinstall`,
 `npx ueca-react-skills --auto` (`--auto` only means "never fail the install"). Never edit them in
 place; after upgrading `ueca-react`, run `npm install` to refresh them.
 
